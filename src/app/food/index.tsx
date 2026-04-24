@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#64748B',
+    color: '#475569',
     lineHeight: 24,
   },
   actions: {
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   buttonPrimary: {
-    backgroundColor: '#16A34A',
+    backgroundColor: '#15803D',
   },
   buttonSecondary: {
     backgroundColor: '#fff',
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   errorText: {
-    color: '#EF4444',
+    color: '#DC2626',
     fontSize: 14,
     textAlign: 'center',
     marginTop: 4,
