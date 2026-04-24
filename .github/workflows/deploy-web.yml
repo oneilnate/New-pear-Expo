@@ -1,12 +1,12 @@
 # Web Deploy — EAS Hosting (main prod alias + per-PR preview)
 #
 # On push to main:
-#   pnpm build:web → eas deploy --prod --alias aaptiv-feed
-#   Promotes https://aaptiv-functional-feed.expo.app to the latest main build.
+#   pnpm build:web → eas deploy --prod --alias food-pod
+#   Promotes https://food-pod.expo.app to the latest main build.
 #
 # On pull_request:
 #   pnpm build:web → eas deploy --alias pr-<number>
-#   Gives each PR its own preview at https://aaptiv-functional-feed--pr-<number>.expo.app
+#   Gives each PR its own preview at https://food-pod--pr-<number>.expo.app
 #   Posts/updates a sticky PR comment with the preview URL.
 #
 # Soft-fail: deploy step has continue-on-error: true — a deploy hiccup never blocks CI.
@@ -63,7 +63,7 @@ jobs:
         run: |
           OUTPUT=$(npx eas-cli@latest deploy \
             --prod \
-            --alias aaptiv-feed \
+            --alias food-pod \
             --non-interactive \
             --json 2>/dev/null)
           DEPLOY_ID=$(echo "$OUTPUT" | jq -r '.deploymentId // .id // ""' 2>/dev/null || echo '')
@@ -90,7 +90,7 @@ jobs:
           DEPLOY_URL=$(echo "$OUTPUT" | jq -r '.url // .deploymentUrl // ""' 2>/dev/null || echo '')
           # Fallback: construct expected alias URL if JSON parse yields nothing
           if [ -z "$DEPLOY_URL" ]; then
-            DEPLOY_URL="https://aaptiv-functional-feed--pr-${PR_NUMBER}.expo.app"
+            DEPLOY_URL="https://food-pod--pr-${PR_NUMBER}.expo.app"
           fi
           echo "deploy-id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"
           echo "deploy-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"

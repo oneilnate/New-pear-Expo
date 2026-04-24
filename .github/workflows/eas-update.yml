@@ -5,7 +5,7 @@
 #   3. pr-cleanup (pull_request: closed)  — deletes the ephemeral EAS branch
 #
 # Sentinel: <!-- obvious-expo-go-pr-preview:v1 --> (distinct from prod commit-comment)
-# Launch:   EAS dashboard → "Open with Orbit" (custom scheme `aaptivfeed` requires this)
+# Launch:   EAS dashboard → "Open with Orbit" (custom scheme `foodpod` requires this)
 # Raw URL format (reference only):
 #   exp://u.expo.dev/<projectId>?channel-name=<ch>&runtime-version=<rtv>&platform=ios
 
@@ -92,7 +92,7 @@ jobs:
             const sentinel    = '<!-- obvious-expo-go-update:v1 -->';
             const projectId   = '28a85fb2-e56c-4a53-a398-0080b43414ea';
             const account     = 'nateoutsidethebox';
-            const projectSlug = 'aaptiv-functional-feed';
+            const projectSlug = 'food-pod';
             const updateGroup = '${{ steps.parse-prod-update.outputs.update_group }}';
             const rtv         = '${{ steps.parse-prod-update.outputs.update_rtv }}';
             const updateFailed = '${{ steps.eas-update.outcome }}' === 'failure';
@@ -115,7 +115,7 @@ jobs:
                 '',
                 `**Open on iPhone:** [View in EAS dashboard → tap 'Open with Orbit'](${dashboardUrl})`,
                 '',
-                `> This app uses a custom scheme (\`aaptivfeed\`), so Expo Go requires launch via the EAS dashboard.`,
+                `> This app uses a custom scheme (\`foodpod\`), so Expo Go requires launch via the EAS dashboard.`,
                 '',
                 '<details>',
                 '<summary>Raw Expo URL (corrected format, for reference)</summary>',
@@ -216,7 +216,7 @@ jobs:
             const sentinel    = '<!-- obvious-expo-go-pr-preview:v1 -->';
             const projectId   = '28a85fb2-e56c-4a53-a398-0080b43414ea';
             const account     = 'nateoutsidethebox';
-            const projectSlug = 'aaptiv-functional-feed';
+            const projectSlug = 'food-pod';
             const prNumber    = context.issue.number;
             const channel     = `pr-${prNumber}`;
             const updateGroup = '${{ steps.parse-pr-update.outputs.update_group }}';
@@ -246,7 +246,7 @@ jobs:
                 '',
                 `**Open on iPhone:** [View in EAS dashboard → tap 'Open with Orbit'](${dashboardUrl})`,
                 '',
-                `> This app uses a custom scheme (\`aaptivfeed\`), so Expo Go requires launch via the EAS dashboard.`,
+                `> This app uses a custom scheme (\`foodpod\`), so Expo Go requires launch via the EAS dashboard.`,
                 '',
                 '<details>',
                 '<summary>Raw Expo URL (corrected format, for reference)</summary>',
