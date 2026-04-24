@@ -16,13 +16,13 @@
  * - Named exports only.
  */
 
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 // biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useQueryClient } from '@tanstack/react-query';
-import { useCreatePod, foodQueryKeys } from '../hooks';
 import { useFoodPodStore } from '@/store/food-pod.store';
+import { foodQueryKeys, useCreatePod } from '../hooks';
 
 export function StartNewPodButton() {
   const router = useRouter();
@@ -74,4 +74,3 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-

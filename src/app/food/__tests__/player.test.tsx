@@ -20,8 +20,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-// biome-ignore lint/style/useImportType: React value import required for JSX transform in vitest-native
+// biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
 import React from 'react';
+
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ─── Hoisted mocks ────────────────────────────────────────────────────────────
@@ -89,11 +90,17 @@ const mockEpisode = {
 const server = setupServer(
   // GET /api/pods/current — required by useCurrentPod() in FoodPlayerScreen
   http.get(`${BASE_URL}/api/pods/current`, () =>
-    HttpResponse.json({ id: 'pod_demo_01', status: 'ready', targetCount: 7, capturedCount: 7, recentSnaps: [], episode: { audioUrl: 'https://example.com/ep.mp3' } }),
+    HttpResponse.json({
+      id: 'pod_demo_01',
+      status: 'ready',
+      targetCount: 7,
+      capturedCount: 7,
+      recentSnaps: [],
+      episode: { audioUrl: 'https://example.com/ep.mp3' },
+    }),
   ),
   http.get(`${BASE_URL}/api/pods/:podId/episode`, () => HttpResponse.json(mockEpisode)),
 );
-
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {

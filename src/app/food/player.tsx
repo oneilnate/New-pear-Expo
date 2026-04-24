@@ -47,7 +47,6 @@ export default function FoodPlayerScreen() {
 
   const { data: episode, isLoading, isError, error, refetch } = useEpisode(podId);
 
-
   const { isLoaded, isPlaying, positionMillis, durationMillis, play, pause, seek } = useAudioPlayer(
     episode?.audioUrl,
   );

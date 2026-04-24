@@ -15,7 +15,6 @@ import type { ReactNode } from 'react';
 // biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
 import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
 
-
 export type PodPhase = 'idle' | 'capturing' | 'generating' | 'ready';
 
 type State = {

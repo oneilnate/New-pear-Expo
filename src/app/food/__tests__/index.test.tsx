@@ -25,7 +25,6 @@ import React from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { FoodPodProvider } from '@/store/food-pod.store';
 
-
 // ── Mock expo-secure-store ─────────────────────────────────────────────────
 const secureStore: Record<string, string> = {};
 
@@ -105,7 +104,6 @@ function makeQueryClient() {
     },
   });
 }
-
 
 function renderWithQueryClient(ui: React.ReactElement, qc?: QueryClient) {
   const queryClient = qc ?? makeQueryClient();

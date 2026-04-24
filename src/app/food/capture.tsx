@@ -51,7 +51,6 @@ export default function CaptureScreen() {
   const podId = currentPod?.id ?? '';
   const { mutateAsync: upload } = useUploadMeal(podId);
 
-
   // ── Camera launcher ──────────────────────────────────────────────────────
   const launchCamera = useCallback(async () => {
     setState({ phase: 'camera' });

@@ -29,8 +29,14 @@ import {
   View,
 } from 'react-native';
 
-import { FoodSnapCard, PodGrid, StartNewPodButton, TuneInModal, useCurrentPod, useTuneIn } from '@/modules/food';
-
+import {
+  FoodSnapCard,
+  PodGrid,
+  StartNewPodButton,
+  TuneInModal,
+  useCurrentPod,
+  useTuneIn,
+} from '@/modules/food';
 
 export default function FoodHomeScreen() {
   const router = useRouter();
@@ -38,7 +44,6 @@ export default function FoodHomeScreen() {
   const { data: podState, isLoading, isError, error, refetch } = useCurrentPod();
   const podId = podState?.id;
   const { showModal, openModal, dismissModal } = useTuneIn(podId ?? '', podState);
-
 
   function handleSnapPress() {
     router.push('/food/capture');
@@ -192,7 +197,6 @@ export default function FoodHomeScreen() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -383,4 +387,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

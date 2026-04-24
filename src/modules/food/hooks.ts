@@ -48,7 +48,6 @@ export const foodQueryKeys = {
   currentPod: ['currentPod'] as const,
 } as const;
 
-
 /**
  * GET /api/pods/current — fetches the current (newest) pod for the demo user.
  * Auto-creates if none exists. Returns PodStateResponse shape.
@@ -61,8 +60,6 @@ export function useCurrentPod(): UseQueryResult<PodStateResponse, Error> {
     staleTime: 10_000,
   });
 }
-
-
 
 // ─── Pod mutations ─────────────────────────────────────────────────────────────────────────
 
