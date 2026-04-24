@@ -1,5 +1,13 @@
 {
   "cli": { "version": ">= 14.0.0", "appVersionSource": "remote" },
+  "update": {
+    "production": {
+      "channel": "production"
+    },
+    "preview": {
+      "channel": "pr-{{PR_NUMBER}}"
+    }
+  },
   "build": {
     "preview": {
       "distribution": "internal",

@@ -2,12 +2,15 @@
 #   1. eas-update (push to main / tags)   — publishes to `production` channel
 #   2. pr-preview (pull_request events)   — publishes to `pr-<number>` channel,
 #                                            posts/updates a sticky dashboard comment
+#                                            with inline QR code for Expo Go scanning
 #   3. pr-cleanup (pull_request: closed)  — deletes the ephemeral EAS branch
 #
 # Sentinel: <!-- obvious-expo-go-pr-preview:v1 --> (distinct from prod commit-comment)
-# Launch:   EAS dashboard → "Open with Orbit" (custom scheme `foodpod` requires this)
-# Raw URL format (reference only):
-#   exp://u.expo.dev/<projectId>?channel-name=<ch>&runtime-version=<rtv>&platform=ios
+# Launch:   Scan QR code with Expo Go camera (iOS or Android)
+# Custom scheme `foodpod` requires Expo Go ≥ 2.29 — QR scan opens the right build.
+#
+# PREREQUISITE: The EXPO_TOKEN GitHub Actions secret must be set in this repo.
+# See README.md § "CI & EAS Setup" for the exact setup command.
 
 name: Expo Go OTA Update
 
@@ -41,6 +44,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::EXPO_TOKEN secret is not set in this repo."
+            echo "::error::Run: echo '<your-token>' | gh secret set EXPO_TOKEN --repo oneilnate/New-pear-Expo"
+            echo "::error::See README.md § 'CI & EAS Setup' for details."
+            exit 1
+          fi
+          echo "EXPO_TOKEN is set ✓"
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -64,10 +77,11 @@ jobs:
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%s)
           eas update \
+            --channel production \
             --branch production \
             --message "${COMMIT_MSG}" \
             --non-interactive \
-            --json 2>/dev/null > /tmp/eas-prod-update.json || true
+            --json 2>/dev/null > /tmp/eas-prod-update.json
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -108,17 +122,20 @@ jobs:
               ].join('\n');
             } else {
               const dashboardUrl = `https://expo.dev/accounts/${account}/projects/${projectSlug}/updates/${updateGroup}`;
+              const qrUrl = `https://qr.expo.dev/eas-update?groupId=${updateGroup}&appScheme=foodpod&host=u.expo.dev`;
               const rawUrl = `exp://u.expo.dev/${projectId}?channel-name=production&runtime-version=${rtv}&platform=ios`;
               body = [
                 sentinel,
                 '## 📱 Expo Go — OTA Update',
                 '',
-                `**Open on iPhone:** [View in EAS dashboard → tap 'Open with Orbit'](${dashboardUrl})`,
+                `| QR Code | Details |`,
+                `|---------|---------|`,
+                `| ![Scan with Expo Go](${qrUrl}) | **Scan with Expo Go** on your iPhone or Android device |`,
                 '',
-                `> This app uses a custom scheme (\`foodpod\`), so Expo Go requires launch via the EAS dashboard.`,
+                `**Or open via EAS dashboard:** [View update → tap 'Open with Orbit'](${dashboardUrl})`,
                 '',
                 '<details>',
-                '<summary>Raw Expo URL (corrected format, for reference)</summary>',
+                '<summary>Raw Expo URL (for reference)</summary>',
                 '',
                 '```',
                 rawUrl,
@@ -142,7 +159,8 @@ jobs:
   # Job 2 — PR preview publish
   # Triggered on every pull_request (opened / synchronize / reopened).
   # Publishes to channel `pr-<number>` so contributors can test on this PR.
-  # Posts the EAS dashboard link (Orbit flow) — required for custom-scheme apps.
+  # Posts a sticky comment with an inline QR code (scannable directly from GitHub)
+  # and an EAS dashboard link as fallback (required for custom-scheme apps).
   # Concurrency block cancels any in-flight publish for the same PR on rapid
   # pushes (force-push or quick sequential commits).
   # Skips draft PRs to avoid burning EAS quota on work-in-progress.
@@ -164,6 +182,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::EXPO_TOKEN secret is not set in this repo."
+            echo "::error::Run: echo '<your-token>' | gh secret set EXPO_TOKEN --repo oneilnate/New-pear-Expo"
+            echo "::error::See README.md § 'CI & EAS Setup' for details."
+            echo "token_missing=true" >> $GITHUB_OUTPUT
+          else
+            echo "EXPO_TOKEN is set ✓"
+            echo "token_missing=false" >> $GITHUB_OUTPUT
+          fi
+        id: check-token
+        continue-on-error: true
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -184,14 +216,16 @@ jobs:
       - name: Publish OTA update to Expo Go (pr-${{ github.event.number }} channel)
         id: eas-update-pr
         continue-on-error: true
+        if: steps.check-token.outputs.token_missing != 'true'
         run: |
           PR_NUMBER="${{ github.event.number }}"
           PR_TITLE="${{ github.event.pull_request.title }}"
           eas update \
+            --channel "pr-${PR_NUMBER}" \
             --branch "pr-${PR_NUMBER}" \
             --message "PR #${PR_NUMBER}: ${PR_TITLE}" \
             --non-interactive \
-            --json 2>/dev/null > /tmp/eas-pr-update.json || true
+            --json 2>/dev/null > /tmp/eas-pr-update.json
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -208,7 +242,7 @@ jobs:
           echo "update_group=${UPDATE_GROUP}" >> $GITHUB_OUTPUT
           echo "update_rtv=${UPDATE_RTV}" >> $GITHUB_OUTPUT
 
-      - name: Post / update sticky PR comment with EAS dashboard link
+      - name: Post / update sticky PR comment with QR code
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -221,13 +255,30 @@ jobs:
             const channel     = `pr-${prNumber}`;
             const updateGroup = '${{ steps.parse-pr-update.outputs.update_group }}';
             const rtv         = '${{ steps.parse-pr-update.outputs.update_rtv }}';
+            const tokenMissing = '${{ steps.check-token.outputs.token_missing }}' === 'true';
 
             const runUrl  = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
             const ts      = new Date().toISOString();
             const outcome = '${{ steps.eas-update-pr.outcome }}';
 
             let body;
-            if (outcome === 'failure' || !updateGroup) {
+            if (tokenMissing) {
+              body = [
+                sentinel,
+                '## 📱 Expo Go — PR Preview',
+                '',
+                '> ❌ **Setup required: `EXPO_TOKEN` secret is not set.**',
+                '> Once set, this PR preview will post a scannable QR code here.',
+                '>',
+                '> **To fix:** Run the following in your terminal:',
+                '> ```bash',
+                '> echo "<your-expo-token>" | gh secret set EXPO_TOKEN --repo oneilnate/New-pear-Expo',
+                '> ```',
+                '> Then re-run this workflow. See [README.md](../blob/main/README.md#ci--eas-setup) for full details.',
+                '',
+                `_[Actions run](${runUrl}) · ${ts}_`,
+              ].join('\n');
+            } else if (outcome === 'failure' || !updateGroup) {
               body = [
                 sentinel,
                 '## 📱 Expo Go — PR Preview',
@@ -239,17 +290,22 @@ jobs:
               ].join('\n');
             } else {
               const dashboardUrl = `https://expo.dev/accounts/${account}/projects/${projectSlug}/updates/${updateGroup}`;
+              const qrUrl = `https://qr.expo.dev/eas-update?groupId=${updateGroup}&appScheme=foodpod&host=u.expo.dev`;
               const rawUrl = `exp://u.expo.dev/${projectId}?channel-name=${channel}&runtime-version=${rtv}&platform=ios`;
               body = [
                 sentinel,
                 '## 📱 Expo Go — PR Preview',
                 '',
-                `**Open on iPhone:** [View in EAS dashboard → tap 'Open with Orbit'](${dashboardUrl})`,
+                '| QR Code | How to open |',
+                '|---------|-------------|',
+                `| ![Scan with Expo Go](${qrUrl}) | 1. Open **Expo Go** on your iPhone or Android<br>2. Tap the camera icon and scan this QR code<br>3. The Food Pod app loads from this PR's JS bundle |`,
                 '',
-                `> This app uses a custom scheme (\`foodpod\`), so Expo Go requires launch via the EAS dashboard.`,
+                `**Alternative:** [Open in EAS dashboard → tap 'Open with Orbit'](${dashboardUrl})`,
+                '',
+                `> ℹ️ If the QR code doesn't work, the app uses a custom scheme (\`foodpod\`) — use the EAS dashboard link above instead.`,
                 '',
                 '<details>',
-                '<summary>Raw Expo URL (corrected format, for reference)</summary>',
+                '<summary>Raw Expo URL (for reference)</summary>',
                 '',
                 '```',
                 rawUrl,
@@ -257,7 +313,7 @@ jobs:
                 '',
                 '</details>',
                 '',
-                `> 🧹 This branch is automatically deleted when the PR closes.`,
+                `> 🧹 This preview branch is automatically deleted when the PR closes.`,
                 '',
                 `_Published to channel \`${channel}\` · [Actions run](${runUrl}) · ${ts}_`,
               ].join('\n');
