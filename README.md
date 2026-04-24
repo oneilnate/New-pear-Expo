@@ -59,4 +59,48 @@ EXPO_PUBLIC_DEMO_BEARER_TOKEN=<token>
 ## CI
 
 - Every push to `main` publishes an EAS OTA update (Expo Go QR code in PR comment)
+- Every non-draft PR gets an Expo Go preview QR code posted in the PR comments
 - `pnpm verify:fast` is the CI gate (typecheck + lint + test + build:web + size-limit)
+
+---
+
+## CI & EAS Setup
+
+The OTA preview workflow requires one GitHub Actions secret to be set:
+
+### `EXPO_TOKEN`
+
+This is the Expo account token that lets the CI runner authenticate with EAS and publish OTA updates.
+
+**How to set it (one-time setup):**
+
+1. Get your Expo token from [expo.dev/accounts/nateoutsidethebox/settings/access-tokens](https://expo.dev/accounts/nateoutsidethebox/settings/access-tokens)
+   - Or retrieve it from the Obvious workspace secret `EXPO_TOKEN` (ask an admin)
+2. Set it as a GitHub Actions secret:
+
+```bash
+echo "<your-expo-token>" | gh secret set EXPO_TOKEN --repo oneilnate/New-pear-Expo
+```
+
+To verify it's set:
+```bash
+gh secret list --repo oneilnate/New-pear-Expo
+# Should show: EXPO_TOKEN   Updated <date>
+```
+
+**What happens after it's set:**
+- Every PR gets a sticky comment with a **scannable QR code** — open Expo Go and scan to load that PR's exact JS bundle on your device
+- Push to `main` posts a commit comment with the production QR code
+- EAS preview branches (`pr-<number>`) are auto-deleted when the PR closes
+
+### Expo project details
+
+| Field | Value |
+|-------|-------|
+| Project ID | `28a85fb2-e56c-4a53-a398-0080b43414ea` |
+| Owner | `nateoutsidethebox` |
+| Slug | `food-pod` |
+| App scheme | `foodpod` |
+| EAS update URL | `https://u.expo.dev/28a85fb2-e56c-4a53-a398-0080b43414ea` |
+
+> **Note:** The project is already registered on expo.dev. The `EXPO_TOKEN` is the only missing piece — once set, CI will be fully green.
