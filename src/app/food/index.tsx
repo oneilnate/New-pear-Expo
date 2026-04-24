@@ -1,168 +1,330 @@
 /**
  * Food Pod home screen — /food
  *
- * Shows the current pod state and provides CTAs to start, continue, or view.
+ * Pixel-matches IMG_5116 (29/30) and IMG_5117 (30/30 UNLOCKED).
+ * Fetches pod state from backend via usePodState (React Query).
  *
  * Architecture contract:
- * - JSX + local state only — no fetch(), no business logic
- * - All mutations delegated to hooks from src/modules/food/
- * - All pod ID persistence via useFoodPodStore (React context)
+ * - JSX + local state only — no business logic, no fetch() calls.
+ * - All server state via usePodState from @/modules/food.
+ * - All navigation via expo-router useRouter.
+ *
+ * F3-E1 — Mobile home screen (30-dot grid + counter + Food Snap card)
  */
 
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useCreatePod } from '@/modules/food';
-import { useFoodPodStore } from '@/store/food-pod.store';
+// biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
+import React from 'react';
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+
+import { FoodSnapCard, PodGrid, usePodState } from '@/modules/food';
+
+/** Hardcoded demo pod ID for F3-E1 per spec */
+const DEMO_POD_ID = 'pod_demo_01';
 
 export default function FoodHomeScreen() {
   const router = useRouter();
-  const { currentPodId, phase, setCapturing } = useFoodPodStore();
+  const { data: podState, isLoading, isError, error, refetch } = usePodState(DEMO_POD_ID);
 
-  const createPod = useCreatePod();
-
-  function handleStartNewPod() {
-    createPod.mutate(undefined, {
-      onSuccess: (pod) => {
-        setCapturing(pod.id);
-        router.push({ pathname: '/food/capture', params: { podId: pod.id } });
-      },
-    });
+  function handleSnapPress() {
+    router.push('/food/capture');
   }
 
-  function handleContinueCapturing() {
-    if (currentPodId) {
-      router.push({ pathname: '/food/capture', params: { podId: currentPodId } });
-    }
+  // ── Loading state ─────────────────────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.centeredContainer}>
+        <ActivityIndicator size="large" color="#15803D" accessibilityLabel="Loading Food Pod" />
+      </SafeAreaView>
+    );
   }
 
-  function handleViewPod() {
-    if (currentPodId) {
-      router.push(`/food/pod/${currentPodId}`);
-    }
-  }
-
-  const isCapturing = phase === 'capturing';
-  const isGeneratingOrReady = phase === 'generating' || phase === 'ready';
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Food Pod</Text>
-        <Text style={styles.subtitle}>
-          Capture your meals and receive a personalised nutrition podcast.
+  // ── Error state ───────────────────────────────────────────────────────────
+  if (isError || !podState) {
+    return (
+      <SafeAreaView style={styles.centeredContainer}>
+        <Text style={styles.errorText}>
+          {error?.message ?? 'Failed to load Food Pod. Please try again.'}
         </Text>
-      </View>
-
-      <View style={styles.actions}>
         <Pressable
-          style={[
-            styles.button,
-            styles.buttonPrimary,
-            createPod.isPending && styles.buttonDisabled,
-          ]}
-          onPress={handleStartNewPod}
-          disabled={createPod.isPending}
-          accessibilityLabel="Start new food pod"
+          style={styles.retryButton}
+          onPress={() => void refetch()}
+          accessibilityLabel="Retry loading Food Pod"
           accessibilityRole="button"
         >
-          {createPod.isPending ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonTextPrimary}>Start new pod</Text>
-          )}
+          <Text style={styles.retryButtonText}>Retry</Text>
         </Pressable>
+      </SafeAreaView>
+    );
+  }
 
-        {createPod.isError && (
-          <Text style={styles.errorText}>
-            {createPod.error?.message ?? 'Failed to create pod. Tap to retry.'}
-          </Text>
-        )}
+  // ── Success state ─────────────────────────────────────────────────────────
+  const { capturedCount, targetCount } = podState;
+  const isUnlocked = capturedCount >= targetCount;
 
-        {isCapturing && currentPodId && (
-          <Pressable
-            style={[styles.button, styles.buttonSecondary]}
-            onPress={handleContinueCapturing}
-            accessibilityLabel="Continue capturing meals"
-            accessibilityRole="button"
-          >
-            <Text style={styles.buttonTextSecondary}>Continue capturing</Text>
-          </Pressable>
-        )}
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={Platform.OS === 'ios'}
+      >
+        {/* Card */}
+        <View style={styles.card}>
+          {/* Card header */}
+          <View style={styles.cardHeader}>
+            <View style={styles.headerLeft}>
+              <View style={styles.headerIconWrap}>
+                <Text style={styles.headerIcon}>🍴</Text>
+              </View>
+              <Text style={styles.cardTitle}>Food Snap</Text>
+            </View>
+            <View style={styles.counterBadge}>
+              <View style={styles.counterBadgeIconWrap}>
+                <Text style={styles.counterBadgeIcon}>📷</Text>
+              </View>
+              <Text style={styles.counterBadgeText}>
+                {isUnlocked ? `${targetCount}/${targetCount}` : `${capturedCount}/${targetCount}`}
+              </Text>
+            </View>
+          </View>
 
-        {isGeneratingOrReady && currentPodId && (
-          <Pressable
-            style={[styles.button, styles.buttonSecondary]}
-            onPress={handleViewPod}
-            accessibilityLabel="View your food pod"
-            accessibilityRole="button"
-          >
-            <Text style={styles.buttonTextSecondary}>
-              {phase === 'ready' ? 'View podcast' : 'View pod (generating…)'}
+          {/* Description */}
+          {!isUnlocked && (
+            <Text style={styles.description}>
+              Snap {targetCount} meals to unlock your personalized{' '}
+              <Text style={styles.descriptionBold}>FoodPod</Text> with nutrition insights and meal
+              ideas.
             </Text>
-          </Pressable>
+          )}
+
+          {/* Dot grid */}
+          <View style={styles.gridWrapper}>
+            <PodGrid capturedCount={capturedCount} targetCount={targetCount} />
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Unlocked banner (30/30 state) */}
+          {isUnlocked ? (
+            <View
+              style={styles.unlockedBanner}
+              accessibilityLabel="Food Pod unlocked"
+              accessibilityRole="none"
+            >
+              <View style={styles.unlockedBadge}>
+                <Text style={styles.unlockedBadgeText}>UNLOCKED</Text>
+              </View>
+              <View style={styles.unlockedTextRow}>
+                <View style={styles.unlockedTextBlock}>
+                  <Text style={styles.unlockedTitle}>Your FoodPod is Ready!</Text>
+                  <Text style={styles.unlockedSubtitle}>
+                    View your personalized nutrition insights
+                  </Text>
+                </View>
+                <Pressable
+                  style={styles.unlockedArrowBtn}
+                  accessibilityLabel="View your FoodPod"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.unlockedArrow}>›</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Text style={styles.recentSnapsLabel}>RECENT SNAPS</Text>
+          )}
+        </View>
+
+        {/* Food Snap CTA */}
+        {!isUnlocked && (
+          <View style={styles.snapCardWrapper}>
+            <FoodSnapCard onPress={handleSnapPress} />
+          </View>
         )}
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 24,
-    paddingTop: 48,
+    backgroundColor: '#FFFFFF',
   },
-  header: {
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#475569',
-    lineHeight: 24,
-  },
-  actions: {
-    gap: 12,
-  },
-  button: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+  centeredContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 56,
+    paddingHorizontal: 24,
+    gap: 16,
   },
-  buttonPrimary: {
-    backgroundColor: '#15803D',
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 32,
+    gap: 16,
   },
-  buttonSecondary: {
-    backgroundColor: '#fff',
+  // Card
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    gap: 16,
   },
-  buttonDisabled: {
-    opacity: 0.6,
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  buttonTextPrimary: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  buttonTextSecondary: {
+  headerIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1A1A1A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerIcon: {
+    fontSize: 20,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#0F172A',
-    fontSize: 17,
-    fontWeight: '500',
   },
-  errorText: {
-    color: '#DC2626',
+  counterBadge: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  counterBadgeIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#15803D',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  counterBadgeIcon: {
+    fontSize: 24,
+  },
+  counterBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  description: {
     fontSize: 14,
+    color: '#475569',
+    lineHeight: 20,
+  },
+  descriptionBold: {
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  gridWrapper: {
+    alignSelf: 'flex-start',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  recentSnapsLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.8,
+  },
+  // Unlocked banner
+  unlockedBanner: {
+    gap: 8,
+  },
+  unlockedBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#15803D',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  unlockedBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  unlockedTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  unlockedTextBlock: {
+    flex: 1,
+    gap: 4,
+  },
+  unlockedTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  unlockedSubtitle: {
+    fontSize: 14,
+    color: '#475569',
+  },
+  unlockedArrowBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1A1A1A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unlockedArrow: {
+    fontSize: 22,
+    color: '#FFFFFF',
+    fontWeight: '400',
+  },
+  // CTA wrapper
+  snapCardWrapper: {
+    paddingBottom: 8,
+  },
+  // Error state
+  errorText: {
+    fontSize: 16,
+    color: '#DC2626',
     textAlign: 'center',
-    marginTop: 4,
+    lineHeight: 24,
+  },
+  retryButton: {
+    backgroundColor: '#15803D',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

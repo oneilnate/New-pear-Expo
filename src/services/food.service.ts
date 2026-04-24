@@ -135,5 +135,33 @@ export async function uploadMealImage(presignedUrl: string, blob: Blob): Promise
   }
 }
 
+// ─── Pod state endpoint ────────────────────────────────────────────────────────
+
+export type SnapThumb = {
+  id: string;
+  thumb: string;
+  rating: number;
+};
+
+export type PodStateResponse = {
+  id: string;
+  status: string;
+  targetCount: number;
+  capturedCount: number;
+  recentSnaps: SnapThumb[];
+  episode: null | Record<string, unknown>;
+};
+
+/**
+ * GET /api/pods/:id — fetch pod state for home screen grid display.
+ * Returns capturedCount, targetCount, recentSnaps, and episode.
+ */
+export async function getPodState(podId: string): Promise<PodStateResponse> {
+  const res = await fetch(`${getApiBaseUrl()}/api/pods/${podId}`, {
+    headers: authHeaders(),
+  });
+  return parseResponse<PodStateResponse>(res);
+}
+
 // Re-export Meal type so consumers can import from service if preferred
 export type { Meal } from '@/modules/food/types';

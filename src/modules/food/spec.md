@@ -23,14 +23,15 @@ Owns:
 
 ## Scaffold status
 
-This is the F1-E1 scaffold. Full hooks/types are stubs — finalized in F2/F3 once
-New-pear-backend API contract is confirmed.
+F3-E1 implemented. usePodState hook + PodGrid/PodCounter/FoodSnapCard components
+added. Home screen (/food) pixel-matches IMG_5116/IMG_5117.
 
 ## Public API
 
 See `index.ts` for the full export list. Key exports:
 - Types: `Pod`, `Meal`, `Podcast`, `PodStatus`, `MealStatus`, `CreateMealResponse`
-- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`
+- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`
+- Components: `PodGrid`, `PodCounter`, `FoodSnapCard`
 
 ## Closed-loop check
 

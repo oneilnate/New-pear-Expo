@@ -20,13 +20,14 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-
+import type { PodStateResponse } from '@/services/food.service';
 import {
   completePod,
   createMeal,
   createPod,
   getPod,
   getPodcast,
+  getPodState,
   patchMeal,
   uploadMealImage,
 } from '@/services/food.service';
@@ -36,6 +37,7 @@ import type { CreateMealResponse, Pod, Podcast } from './types';
 
 export const foodQueryKeys = {
   pod: (podId: string) => ['pod', podId] as const,
+  podState: (podId: string) => ['podState', podId] as const,
   podcast: (podId: string) => ['podcast', podId] as const,
 } as const;
 
@@ -89,6 +91,18 @@ export function useCompletePod(): UseMutationResult<Pod, Error, string> {
     onSuccess: (pod) => {
       queryClient.setQueryData(foodQueryKeys.pod(pod.id), pod);
     },
+  });
+}
+
+/**
+ * GET /api/pods/:podId — fetches pod state for home screen (capturedCount, targetCount, etc).
+ * staleTime: 10 s per F3-E1 spec.
+ */
+export function usePodState(podId: string): UseQueryResult<PodStateResponse, Error> {
+  return useQuery({
+    queryKey: foodQueryKeys.podState(podId),
+    queryFn: () => getPodState(podId),
+    staleTime: 10_000,
   });
 }
 
