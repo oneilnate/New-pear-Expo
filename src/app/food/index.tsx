@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   buttonPrimary: {
-    backgroundColor: '#22C55E',
+    backgroundColor: '#16A34A',
   },
   buttonSecondary: {
     backgroundColor: '#fff',
