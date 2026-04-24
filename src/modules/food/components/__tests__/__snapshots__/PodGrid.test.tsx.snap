@@ -1,0 +1,149 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PodGrid > matches snapshot (29/30 state) 1`] = `
+<View
+  accessible={false}
+  style={{"flexDirection":"column","gap":16}}
+>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
+    <View
+      accessibilityLabel="Captured meal 1"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 2"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 3"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 4"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 5"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 6"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+  </View>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
+    <View
+      accessibilityLabel="Captured meal 7"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 8"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 9"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 10"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 11"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 12"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+  </View>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
+    <View
+      accessibilityLabel="Captured meal 13"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 14"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 15"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 16"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 17"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 18"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+  </View>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
+    <View
+      accessibilityLabel="Captured meal 19"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 20"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 21"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 22"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 23"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 24"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+  </View>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
+    <View
+      accessibilityLabel="Captured meal 25"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 26"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 27"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 28"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Captured meal 29"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
+    />
+    <View
+      accessibilityLabel="Empty slot 30"
+      style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#E2E8F0"}]}
+    />
+  </View>
+</View>
+`;
