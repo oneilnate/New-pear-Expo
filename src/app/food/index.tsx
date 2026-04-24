@@ -121,9 +121,13 @@ export default function FoodHomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Tune In modal — auto-shown on first unlock, re-openable via button */}
-      {/* Guard: do not auto-open modal when pod is in failed state (useTuneIn also
-          guards via status==='ready', but we make the intent explicit here). */}
-      <TuneInModal visible={showModal && status !== 'failed'} onTuneIn={handleTuneIn} onNotNow={handleNotNow} />
+      {/* Guard: do not auto-open modal when pod failed (useTuneIn also requires
+          status==='ready', but explicit here for clarity). */}
+      <TuneInModal
+        visible={showModal && status !== 'failed'}
+        onTuneIn={handleTuneIn}
+        onNotNow={handleNotNow}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
