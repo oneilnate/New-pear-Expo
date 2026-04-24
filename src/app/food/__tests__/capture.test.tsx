@@ -51,6 +51,26 @@ vi.mock('expo-image-picker', () => ({
   MediaTypeOptions: { Images: 'Images' },
 }));
 
+// expo-secure-store depends on expo-modules-core native globals not available
+// in the Node/vitest test environment. Provide an in-memory shim.
+vi.mock('expo-secure-store', () => {
+  const store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    getItemAsync: async (key: string) => store[key] ?? null,
+    setItemAsync: async (key: string, value: string) => {
+      store[key] = value;
+    },
+    deleteItemAsync: async (key: string) => {
+      delete store[key];
+    },
+    isAvailableAsync: async () => true,
+  };
+});
+
 // ─── Environment ─────────────────────────────────────────────────────────────
 
 const BASE_URL = 'https://test-capture-screen.example.com';

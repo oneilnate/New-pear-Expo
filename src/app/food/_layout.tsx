@@ -13,7 +13,8 @@ export default function FoodLayout() {
     <FoodPodProvider>
       <Stack screenOptions={{ headerBackTitle: 'Back' }}>
         <Stack.Screen name="index" options={{ title: 'Food Pod' }} />
-        {/* capture and pod/[id] screens added in F2/F3 once New-pear-backend is live */}
+        <Stack.Screen name="player" options={{ title: 'Your FoodPod' }} />
+        {/* capture screen added in F3-E2 */}
       </Stack>
     </FoodPodProvider>
   );

@@ -30,12 +30,19 @@ F3-E2 implemented. useUploadMeal hook added. Calls uploadMeal() service (POST
 /api/pods/:podId/images multipart) and invalidates podState query on success so
 home grid auto-refreshes.
 
+F3-E3 implemented. TuneInModal component + useTuneIn hook added.
+- isUnlocked: status === 'ready' && episode != null
+- hasShownTuneIn: persisted per-pod via expo-secure-store
+- Auto-shows on first unlock, re-openable via "Tune In" banner button
+- Tune In navigates to /food/player; Not Now dismisses + persists flag
+- Player screen stub at /food/player (full implementation in F3-E4)
+
 ## Public API
 
 See `index.ts` for the full export list. Key exports:
 - Types: `Pod`, `Meal`, `Podcast`, `PodStatus`, `MealStatus`, `CreateMealResponse`
-- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `useUploadMeal`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`
-- Components: `PodGrid`, `PodCounter`, `FoodSnapCard`
+- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `useUploadMeal`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`, `useTuneIn`
+- Components: `PodGrid`, `PodCounter`, `FoodSnapCard`, `TuneInModal`
 
 ## Closed-loop check
 
@@ -46,4 +53,3 @@ pnpm lint
 ```
 
 All three must exit 0 before committing changes to this module.
-

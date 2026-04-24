@@ -2,14 +2,17 @@
  * Food Pod home screen — /food
  *
  * Pixel-matches IMG_5116 (29/30) and IMG_5117 (30/30 UNLOCKED).
+ * Shows TuneInModal (IMG_5118) when pod.status === 'ready' && episode != null.
  * Fetches pod state from backend via usePodState (React Query).
  *
  * Architecture contract:
  * - JSX + local state only — no business logic, no fetch() calls.
  * - All server state via usePodState from @/modules/food.
  * - All navigation via expo-router useRouter.
+ * - TuneIn state via useTuneIn hook.
  *
  * F3-E1 — Mobile home screen (30-dot grid + counter + Food Snap card)
+ * F3-E3 — UNLOCKED state + Tune In modal
  */
 
 import { useRouter } from 'expo-router';
@@ -26,7 +29,7 @@ import {
   View,
 } from 'react-native';
 
-import { FoodSnapCard, PodGrid, usePodState } from '@/modules/food';
+import { FoodSnapCard, PodGrid, TuneInModal, usePodState, useTuneIn } from '@/modules/food';
 
 /** Hardcoded demo pod ID for F3-E1 per spec */
 const DEMO_POD_ID = 'pod_demo_01';
@@ -34,9 +37,19 @@ const DEMO_POD_ID = 'pod_demo_01';
 export default function FoodHomeScreen() {
   const router = useRouter();
   const { data: podState, isLoading, isError, error, refetch } = usePodState(DEMO_POD_ID);
+  const { showModal, openModal, dismissModal } = useTuneIn(DEMO_POD_ID, podState);
 
   function handleSnapPress() {
     router.push('/food/capture');
+  }
+
+  function handleTuneIn() {
+    void dismissModal();
+    router.push('/food/player');
+  }
+
+  function handleNotNow() {
+    void dismissModal();
   }
 
   // ── Loading state ─────────────────────────────────────────────────────────
@@ -69,10 +82,14 @@ export default function FoodHomeScreen() {
 
   // ── Success state ─────────────────────────────────────────────────────────
   const { capturedCount, targetCount } = podState;
-  const isUnlocked = capturedCount >= targetCount;
+  // Grid UNLOCKED: capturedCount >= targetCount (visual state on home screen)
+  const isGridUnlocked = capturedCount >= targetCount;
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Tune In modal — auto-shown on first unlock, re-openable via button */}
+      <TuneInModal visible={showModal} onTuneIn={handleTuneIn} onNotNow={handleNotNow} />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -93,13 +110,15 @@ export default function FoodHomeScreen() {
                 <Text style={styles.counterBadgeIcon}>📷</Text>
               </View>
               <Text style={styles.counterBadgeText}>
-                {isUnlocked ? `${targetCount}/${targetCount}` : `${capturedCount}/${targetCount}`}
+                {isGridUnlocked
+                  ? `${targetCount}/${targetCount}`
+                  : `${capturedCount}/${targetCount}`}
               </Text>
             </View>
           </View>
 
           {/* Description */}
-          {!isUnlocked && (
+          {!isGridUnlocked && (
             <Text style={styles.description}>
               Snap {targetCount} meals to unlock your personalized{' '}
               <Text style={styles.descriptionBold}>FoodPod</Text> with nutrition insights and meal
@@ -115,7 +134,7 @@ export default function FoodHomeScreen() {
           <View style={styles.divider} />
 
           {/* Unlocked banner (30/30 state) */}
-          {isUnlocked ? (
+          {isGridUnlocked ? (
             <View
               style={styles.unlockedBanner}
               accessibilityLabel="Food Pod unlocked"
@@ -131,14 +150,26 @@ export default function FoodHomeScreen() {
                     View your personalized nutrition insights
                   </Text>
                 </View>
+                {/* Re-open Tune In modal */}
                 <Pressable
                   style={styles.unlockedArrowBtn}
-                  accessibilityLabel="View your FoodPod"
+                  onPress={openModal}
+                  accessibilityLabel="Tune In to your FoodPod"
                   accessibilityRole="button"
                 >
                   <Text style={styles.unlockedArrow}>›</Text>
                 </Pressable>
               </View>
+
+              {/* Explicit Tune In CTA below the row */}
+              <Pressable
+                style={styles.tuneInCta}
+                onPress={openModal}
+                accessibilityLabel="Open Tune In for your FoodPod"
+                accessibilityRole="button"
+              >
+                <Text style={styles.tuneInCtaText}>Tune In</Text>
+              </Pressable>
             </View>
           ) : (
             <Text style={styles.recentSnapsLabel}>RECENT SNAPS</Text>
@@ -146,7 +177,7 @@ export default function FoodHomeScreen() {
         </View>
 
         {/* Food Snap CTA */}
-        {!isUnlocked && (
+        {!isGridUnlocked && (
           <View style={styles.snapCardWrapper}>
             <FoodSnapCard onPress={handleSnapPress} />
           </View>
@@ -304,6 +335,19 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#FFFFFF',
     fontWeight: '400',
+  },
+  tuneInCta: {
+    backgroundColor: '#15803D',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  tuneInCtaText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
   // CTA wrapper
   snapCardWrapper: {
