@@ -13,6 +13,9 @@ export type { PodCounterProps } from './components/PodCounter';
 export { PodCounter } from './components/PodCounter';
 export type { PodGridProps } from './components/PodGrid';
 export { PodGrid } from './components/PodGrid';
+// TuneIn
+export type { TuneInModalProps } from './components/TuneInModal';
+export { TuneInModal } from './components/TuneInModal';
 // Hooks
 export {
   foodQueryKeys,
@@ -26,7 +29,8 @@ export {
   useUploadMeal,
   useUploadMealImage,
 } from './hooks';
-
+export type { UseTuneInResult } from './tunein';
+export { useTuneIn } from './tunein';
 // Types
 export type {
   CreateMealResponse,
