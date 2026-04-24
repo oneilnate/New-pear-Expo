@@ -13,7 +13,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-// biome-ignore lint/correctness/noUnusedImports: React value import required for JSX transform in vitest-native
+// biome-ignore lint/style/useImportType: React value import required for JSX transform in vitest-native
 import React from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 

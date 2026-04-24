@@ -9,6 +9,9 @@ export type { FoodSnapCardProps } from './components/FoodSnapCard';
 
 // Components
 export { FoodSnapCard } from './components/FoodSnapCard';
+// Player
+export type { PlayerControlsProps } from './components/PlayerControls';
+export { formatMs, PlayerControls } from './components/PlayerControls';
 export type { PodCounterProps } from './components/PodCounter';
 export { PodCounter } from './components/PodCounter';
 export type { PodGridProps } from './components/PodGrid';
@@ -16,12 +19,15 @@ export { PodGrid } from './components/PodGrid';
 // TuneIn
 export type { TuneInModalProps } from './components/TuneInModal';
 export { TuneInModal } from './components/TuneInModal';
+export type { AudioPlayerState } from './hooks';
 // Hooks
 export {
   foodQueryKeys,
+  useAudioPlayer,
   useCompletePod,
   useCreateMeal,
   useCreatePod,
+  useEpisode,
   usePatchMeal,
   usePodcast,
   usePodState,
@@ -34,6 +40,7 @@ export { useTuneIn } from './tunein';
 // Types
 export type {
   CreateMealResponse,
+  Episode,
   GroundedFacts,
   Meal,
   MealStatus,

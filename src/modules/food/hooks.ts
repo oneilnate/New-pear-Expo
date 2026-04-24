@@ -20,11 +20,15 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { Audio } from 'expo-av';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ImageAsset, PodStateResponse, UploadMealResponse } from '@/services/food.service';
 import {
   completePod,
   createMeal,
   createPod,
+  getEpisode,
   getPod,
   getPodcast,
   getPodState,
@@ -32,7 +36,7 @@ import {
   uploadMeal,
   uploadMealImage,
 } from '@/services/food.service';
-import type { CreateMealResponse, Pod, Podcast } from './types';
+import type { CreateMealResponse, Episode, Pod, Podcast } from './types';
 
 // ─── Query keys ────────────────────────────────────────────────────────────────────────────────
 
@@ -40,6 +44,7 @@ export const foodQueryKeys = {
   pod: (podId: string) => ['pod', podId] as const,
   podState: (podId: string) => ['podState', podId] as const,
   podcast: (podId: string) => ['podcast', podId] as const,
+  episode: (podId: string) => ['episode', podId] as const,
 } as const;
 
 // ─── Pod mutations ─────────────────────────────────────────────────────────────────────────
@@ -147,4 +152,152 @@ export function usePodcast(
     queryFn: () => getPodcast(podId),
     enabled: podStatus === 'ready',
   });
+}
+
+// ─── Episode hook ─────────────────────────────────────────────────────────
+
+/**
+ * GET /api/pods/:id/episode — fetch episode metadata for the player.
+ * staleTime: 60s per spec (audio URL stable once generated).
+ * Error with HTTP 404 means no episode yet.
+ */
+export function useEpisode(podId: string): UseQueryResult<Episode, Error> {
+  return useQuery({
+    queryKey: foodQueryKeys.episode(podId),
+    queryFn: () => getEpisode(podId),
+    staleTime: 60_000,
+    // Don't retry 404 — no episode ready is a valid state, not a transient error.
+    // For other errors, use the QueryClient default retry (0 in tests, 3 in prod).
+    retry: (_failureCount, error) => {
+      if (error.message.startsWith('HTTP 404')) return false;
+      // Respect QueryClient default (false in tests via defaultOptions.queries.retry)
+      return false;
+    },
+  });
+}
+
+// ─── Audio player hook ─────────────────────────────────────────────────────
+
+export type AudioPlayerState = {
+  /** True once the sound is fully loaded and ready to play */
+  isLoaded: boolean;
+  /** True while audio is playing */
+  isPlaying: boolean;
+  /** Current position in milliseconds */
+  positionMillis: number;
+  /** Total duration in milliseconds (0 until loaded) */
+  durationMillis: number;
+  /** Resume / start playback */
+  play: () => Promise<void>;
+  /** Pause playback */
+  pause: () => Promise<void>;
+  /** Seek to a position in milliseconds */
+  seek: (ms: number) => Promise<void>;
+};
+
+/**
+ * useAudioPlayer — wraps expo-av Audio.Sound lifecycle.
+ *
+ * Loads the given audioUrl, exposes playback state, and auto-unloads:
+ *   - on screen blur (useFocusEffect)
+ *   - on component unmount
+ *
+ * Architecture: hook only; no fetch() calls.
+ */
+export function useAudioPlayer(audioUrl: string | undefined): AudioPlayerState {
+  const soundRef = useRef<Audio.Sound | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [positionMillis, setPositionMillis] = useState(0);
+  const [durationMillis, setDurationMillis] = useState(0);
+
+  // Load sound when audioUrl becomes available
+  useEffect(() => {
+    if (!audioUrl) return;
+    const url: string = audioUrl;
+
+    let cancelled = false;
+    let sound: Audio.Sound | null = null;
+
+    async function load() {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+        });
+
+        const { sound: loaded, status } = await Audio.Sound.createAsync(
+          { uri: url },
+          { shouldPlay: false, progressUpdateIntervalMillis: 500 },
+          (update) => {
+            if (cancelled) return;
+            if (!update.isLoaded) return;
+            setPositionMillis(update.positionMillis);
+            if (update.durationMillis !== undefined && update.durationMillis > 0) {
+              setDurationMillis(update.durationMillis);
+            }
+            setIsPlaying(update.isPlaying);
+          },
+        );
+
+        if (cancelled) {
+          await loaded.unloadAsync();
+          return;
+        }
+
+        sound = loaded;
+        soundRef.current = loaded;
+
+        if (status.isLoaded) {
+          setIsLoaded(true);
+          if (status.durationMillis !== undefined && status.durationMillis > 0) {
+            setDurationMillis(status.durationMillis);
+          }
+        }
+      } catch {
+        // Load failure is non-fatal — UI shows error state
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+      if (sound) {
+        void sound.unloadAsync().catch(() => {});
+      }
+      soundRef.current = null;
+      setIsLoaded(false);
+      setIsPlaying(false);
+      setPositionMillis(0);
+    };
+  }, [audioUrl]);
+
+  // Auto-unload on screen blur (pause + keep position)
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (soundRef.current) {
+          void soundRef.current.pauseAsync().catch(() => {});
+        }
+      };
+    }, []),
+  );
+
+  const play = useCallback(async () => {
+    if (!soundRef.current) return;
+    await soundRef.current.playAsync();
+  }, []);
+
+  const pause = useCallback(async () => {
+    if (!soundRef.current) return;
+    await soundRef.current.pauseAsync();
+  }, []);
+
+  const seek = useCallback(async (ms: number) => {
+    if (!soundRef.current) return;
+    await soundRef.current.setPositionAsync(ms);
+  }, []);
+
+  return { isLoaded, isPlaying, positionMillis, durationMillis, play, pause, seek };
 }

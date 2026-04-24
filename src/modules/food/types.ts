@@ -80,3 +80,14 @@ export type CreateMealResponse = {
   uploadUrl: string;
   storagePath: string;
 };
+
+/** Shape returned by GET /api/pods/:id/episode */
+export type Episode = {
+  episodeId: string;
+  audioUrl: string;
+  durationSec: number;
+  title: string;
+  summary: string;
+  highlights: string[];
+  createdAt: string;
+};

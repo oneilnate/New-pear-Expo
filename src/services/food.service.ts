@@ -13,7 +13,7 @@
  * Reads EXPO_PUBLIC_API_BASE_URL from env vars (Railway URL set via eas.json).
  */
 
-import type { CreateMealResponse, Meal, Pod, Podcast } from '@/modules/food/types';
+import type { CreateMealResponse, Episode, Meal, Pod, Podcast } from '@/modules/food/types';
 
 /** Resolve base URL from Expo public env var (injected at build time). */
 function getApiBaseUrl(): string {
@@ -206,5 +206,19 @@ export async function uploadMeal(podId: string, asset: ImageAsset): Promise<Uplo
   return parseResponse<UploadMealResponse>(res);
 }
 
+// ─── Episode endpoint ────────────────────────────────────────────────────────
+
+/**
+ * GET /api/pods/:id/episode — fetch episode metadata for the player.
+ * Returns { episodeId, audioUrl, durationSec, title, summary, highlights, createdAt }.
+ * Throws HTTP 404 when no episode exists yet (pod not ready).
+ */
+export async function getEpisode(podId: string): Promise<Episode> {
+  const res = await fetch(`${getApiBaseUrl()}/api/pods/${podId}/episode`, {
+    headers: authHeaders(),
+  });
+  return parseResponse<Episode>(res);
+}
+
 // Re-export Meal type so consumers can import from service if preferred
-export type { Meal } from '@/modules/food/types';
+export type { Episode, Meal } from '@/modules/food/types';
