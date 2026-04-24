@@ -1,6 +1,6 @@
 <!-- obvious-install: skill=autobuild-setup, skill-version=1.0.1, template-version=1 -->
 
-# Functional-Health — Repo Contract
+# Food Pod — Repo Contract
 
 Expo SDK 54 · expo-router v4 · RN 0.81 · React 19 · TS 5.7 · pnpm 9 · Node 22.
 

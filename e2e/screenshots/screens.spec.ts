@@ -24,7 +24,12 @@ import { injectAxe } from 'axe-playwright';
 // ─── Route manifest ────────────────────────────────────────────────────────────
 // Each entry: { route, name, kind }
 // kind: 'leaf' | 'container'  (used for render-count budget check)
-const ROUTES = [{ route: '/', name: 'home', kind: 'leaf' as const }] as const;
+// Food Pod routes only — this is a food-pod-only app (no home/explore).
+// The '/' route redirects to '/food'; both are tested.
+const ROUTES = [
+  { route: '/', name: 'home', kind: 'leaf' as const },
+  { route: '/food', name: 'food-pod', kind: 'leaf' as const },
+] as const;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
