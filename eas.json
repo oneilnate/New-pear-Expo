@@ -1,26 +1,18 @@
 {
   "cli": { "version": ">= 14.0.0", "appVersionSource": "remote" },
-  "update": {
-    "production": {
-      "channel": "production"
-    },
-    "preview": {
-      "channel": "pr-{{PR_NUMBER}}"
-    }
-  },
   "build": {
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://placeholder-railway-url.railway.app",
-        "EXPO_PUBLIC_DEMO_BEARER_TOKEN": "placeholder-bearer-token"
+        "EXPO_PUBLIC_API_BASE_URL": "https://pear-sandbox.everbetter.com",
+        "EXPO_PUBLIC_DEMO_BEARER_TOKEN": "c80141b0-1531-4896-b5e6-0b51f0ed31ce"
       }
     },
     "production": {
       "distribution": "store",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://placeholder-railway-url.railway.app",
-        "EXPO_PUBLIC_DEMO_BEARER_TOKEN": "placeholder-bearer-token"
+        "EXPO_PUBLIC_API_BASE_URL": "https://pear-sandbox.everbetter.com",
+        "EXPO_PUBLIC_DEMO_BEARER_TOKEN": "c80141b0-1531-4896-b5e6-0b51f0ed31ce"
       }
     }
   }

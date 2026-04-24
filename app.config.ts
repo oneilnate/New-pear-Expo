@@ -69,12 +69,12 @@ const config: ExpoConfig = {
     policy: 'appVersion',
   },
   updates: {
-    url: 'https://u.expo.dev/28a85fb2-e56c-4a53-a398-0080b43414ea',
+    url: 'https://u.expo.dev/80d682b2-9c28-4d81-8b5a-bb09e6dd1e79',
   },
   extra: {
     router: {},
     eas: {
-      projectId: '28a85fb2-e56c-4a53-a398-0080b43414ea',
+      projectId: '80d682b2-9c28-4d81-8b5a-bb09e6dd1e79',
       apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://pear-sandbox.everbetter.com',
       demoBearerToken: process.env.EXPO_PUBLIC_DEMO_BEARER_TOKEN ?? '',
     },
