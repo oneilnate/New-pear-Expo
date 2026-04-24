@@ -1,10 +1,16 @@
 /**
- * PodGrid — 30-dot grid visualising meal capture progress.
+ * PodGrid — dot grid visualising meal capture progress.
  *
- * Layout: 6 columns × 5 rows = 30 dots
+ * Layout: driven by `targetCount` from props. Dots are arranged in rows of up
+ * to 7 columns. For the current 7-meal target, this renders a single row of 7.
+ *
+ * CHANGE from F3-E1: TOTAL_DOTS was hardcoded to 30 (6-col × 5-row); now
+ * derived from `targetCount` so the grid responds to server-side target
+ * changes automatically. Default 7 matches the new 7-meal target.
+ *
  * Captured dots: #15803D (WCAG AA 4.86:1 on white)
  * Empty dots:    #E2E8F0 (decorative, no contrast requirement)
- * Dot size: 12px diameter, 16px gap
+ * Dot size: 12px diameter, 16px gap (same as F3-E1 — maintains IMG_5116/5117 style)
  *
  * Architecture: display-only component — no hooks, no fetch.
  */
@@ -13,10 +19,10 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-const TOTAL_DOTS = 30;
+// Layout constants — maintain IMG_5116/5117 visual style
 const DOT_SIZE = 12;
 const DOT_GAP = 16;
-const COLUMNS = 6;
+const COLUMNS = 7;
 
 const GREEN = '#15803D'; // WCAG AA 4.86:1 on #FFFFFF
 const GRAY = '#E2E8F0'; // decorative empty state
@@ -27,14 +33,17 @@ export type PodGridProps = {
 };
 
 export function PodGrid({ capturedCount, targetCount }: PodGridProps) {
-  const filled = Math.min(capturedCount, targetCount);
+  // Drive total dots from server targetCount; prefer dynamic.
+  // If targetCount is somehow 0 or negative, fall back to 7.
+  const totalDots = targetCount > 0 ? targetCount : 7;
+  const filled = Math.min(capturedCount, totalDots);
 
   const rows: boolean[][] = [];
-  for (let r = 0; r < Math.ceil(TOTAL_DOTS / COLUMNS); r++) {
+  for (let r = 0; r < Math.ceil(totalDots / COLUMNS); r++) {
     const row: boolean[] = [];
     for (let c = 0; c < COLUMNS; c++) {
       const index = r * COLUMNS + c;
-      if (index < TOTAL_DOTS) {
+      if (index < totalDots) {
         row.push(index < filled);
       }
     }

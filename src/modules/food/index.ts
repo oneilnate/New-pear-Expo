@@ -9,6 +9,7 @@ export type { FoodSnapCardProps } from './components/FoodSnapCard';
 
 // Components
 export { FoodSnapCard } from './components/FoodSnapCard';
+export { StartNewPodButton } from './components/StartNewPodButton';
 // Player
 export type { PlayerControlsProps } from './components/PlayerControls';
 export { formatMs, PlayerControls } from './components/PlayerControls';
@@ -27,6 +28,7 @@ export {
   useCompletePod,
   useCreateMeal,
   useCreatePod,
+  useCurrentPod,
   useEpisode,
   usePatchMeal,
   usePodcast,

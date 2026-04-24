@@ -29,15 +29,16 @@ import {
   View,
 } from 'react-native';
 
-import { FoodSnapCard, PodGrid, TuneInModal, usePodState, useTuneIn } from '@/modules/food';
+import { FoodSnapCard, PodGrid, StartNewPodButton, TuneInModal, useCurrentPod, useTuneIn } from '@/modules/food';
 
-/** Hardcoded demo pod ID for F3-E1 per spec */
-const DEMO_POD_ID = 'pod_demo_01';
 
 export default function FoodHomeScreen() {
   const router = useRouter();
-  const { data: podState, isLoading, isError, error, refetch } = usePodState(DEMO_POD_ID);
-  const { showModal, openModal, dismissModal } = useTuneIn(DEMO_POD_ID, podState);
+  // F7 (exe_VKuAAzpN): podId driven by GET /api/pods/current via useCurrentPod()
+  const { data: podState, isLoading, isError, error, refetch } = useCurrentPod();
+  const podId = podState?.id;
+  const { showModal, openModal, dismissModal } = useTuneIn(podId ?? '', podState);
+
 
   function handleSnapPress() {
     router.push('/food/capture');
@@ -182,10 +183,16 @@ export default function FoodHomeScreen() {
             <FoodSnapCard onPress={handleSnapPress} />
           </View>
         )}
+
+        {/* Start a new FoodPod — always visible, secondary style */}
+        <View style={styles.startNewWrapper}>
+          <StartNewPodButton />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -353,6 +360,10 @@ const styles = StyleSheet.create({
   snapCardWrapper: {
     paddingBottom: 8,
   },
+  // Start new pod wrapper — always visible below FoodSnapCard
+  startNewWrapper: {
+    paddingBottom: 8,
+  },
   // Error state
   errorText: {
     fontSize: 16,
@@ -372,3 +383,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

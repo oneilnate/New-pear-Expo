@@ -28,6 +28,7 @@ import {
   completePod,
   createMeal,
   createPod,
+  getCurrentPod,
   getEpisode,
   getPod,
   getPodcast,
@@ -36,16 +37,32 @@ import {
   uploadMeal,
   uploadMealImage,
 } from '@/services/food.service';
-import type { CreateMealResponse, Episode, Pod, Podcast } from './types';
 
-// ─── Query keys ────────────────────────────────────────────────────────────────────────────────
+import type { CreateMealResponse, Episode, Pod, Podcast } from './types';
 
 export const foodQueryKeys = {
   pod: (podId: string) => ['pod', podId] as const,
   podState: (podId: string) => ['podState', podId] as const,
   podcast: (podId: string) => ['podcast', podId] as const,
   episode: (podId: string) => ['episode', podId] as const,
+  currentPod: ['currentPod'] as const,
 } as const;
+
+
+/**
+ * GET /api/pods/current — fetches the current (newest) pod for the demo user.
+ * Auto-creates if none exists. Returns PodStateResponse shape.
+ * staleTime: 10 s (matches usePodState)
+ */
+export function useCurrentPod(): UseQueryResult<PodStateResponse, Error> {
+  return useQuery({
+    queryKey: foodQueryKeys.currentPod,
+    queryFn: () => getCurrentPod(),
+    staleTime: 10_000,
+  });
+}
+
+
 
 // ─── Pod mutations ─────────────────────────────────────────────────────────────────────────
 

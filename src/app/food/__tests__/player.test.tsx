@@ -87,8 +87,13 @@ const mockEpisode = {
 // ─── MSW server ───────────────────────────────────────────────────────────────
 
 const server = setupServer(
+  // GET /api/pods/current — required by useCurrentPod() in FoodPlayerScreen
+  http.get(`${BASE_URL}/api/pods/current`, () =>
+    HttpResponse.json({ id: 'pod_demo_01', status: 'ready', targetCount: 7, capturedCount: 7, recentSnaps: [], episode: { audioUrl: 'https://example.com/ep.mp3' } }),
+  ),
   http.get(`${BASE_URL}/api/pods/:podId/episode`, () => HttpResponse.json(mockEpisode)),
 );
+
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {

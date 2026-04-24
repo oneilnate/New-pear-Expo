@@ -81,9 +81,14 @@ process.env.EXPO_PUBLIC_DEMO_BEARER_TOKEN = 'test-token-capture-screen';
 
 import CaptureScreen from '../capture';
 
+
 // ─── MSW server ───────────────────────────────────────────────────────────────
 
 const server = setupServer(
+  // GET /api/pods/current — required by useCurrentPod() in CaptureScreen
+  http.get(`${BASE_URL}/api/pods/current`, () =>
+    HttpResponse.json({ id: 'pod_demo_01', status: 'draft', targetCount: 7, capturedCount: 3, recentSnaps: [], episode: null }),
+  ),
   http.post(`${BASE_URL}/api/pods/:podId/images`, () =>
     HttpResponse.json({ imageId: 'img-new', sequenceNumber: 4, capturedCount: 4 }, { status: 201 }),
   ),

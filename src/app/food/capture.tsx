@@ -33,10 +33,7 @@ import {
   View,
 } from 'react-native';
 
-import { useUploadMeal } from '@/modules/food';
-
-/** Hardcoded demo pod ID — matches F3-E1 constant */
-const DEMO_POD_ID = 'pod_demo_01';
+import { useCurrentPod, useUploadMeal } from '@/modules/food';
 
 type ScreenState =
   | { phase: 'requesting' } // awaiting permission result
@@ -49,7 +46,11 @@ type ScreenState =
 export default function CaptureScreen() {
   const router = useRouter();
   const [state, setState] = useState<ScreenState>({ phase: 'requesting' });
-  const { mutateAsync: upload } = useUploadMeal(DEMO_POD_ID);
+  // F7 (exe_VKuAAzpN): podId from useCurrentPod() instead of hardcoded DEMO_POD_ID
+  const { data: currentPod } = useCurrentPod();
+  const podId = currentPod?.id ?? '';
+  const { mutateAsync: upload } = useUploadMeal(podId);
+
 
   // ── Camera launcher ──────────────────────────────────────────────────────
   const launchCamera = useCallback(async () => {

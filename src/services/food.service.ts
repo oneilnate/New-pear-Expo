@@ -206,6 +206,19 @@ export async function uploadMeal(podId: string, asset: ImageAsset): Promise<Uplo
   return parseResponse<UploadMealResponse>(res);
 }
 
+// ─── Current pod endpoint ───────────────────────────────────────────────────
+
+/**
+ * GET /api/pods/current — fetch the current (newest) pod for the demo user.
+ * Auto-creates a pod if none exists. Returns PodStateResponse shape.
+ */
+export async function getCurrentPod(): Promise<PodStateResponse> {
+  const res = await fetch(`${getApiBaseUrl()}/api/pods/current`, {
+    headers: authHeaders(),
+  });
+  return parseResponse<PodStateResponse>(res);
+}
+
 // ─── Episode endpoint ────────────────────────────────────────────────────────
 
 /**
