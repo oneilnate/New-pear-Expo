@@ -84,6 +84,11 @@ jobs:
             --json 2>/dev/null > /tmp/eas-prod-update.json
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Inline EXPO_PUBLIC_* vars at bundle time — eas update does NOT read
+          # eas.json build.env, so these must be set explicitly. See deployment
+          # runbook §7 "Metro env-inline cache trap".
+          EXPO_PUBLIC_API_BASE_URL: https://pear-sandbox.everbetter.com
+          EXPO_PUBLIC_DEMO_BEARER_TOKEN: c80141b0-1531-4896-b5e6-0b51f0ed31ce
 
       - name: Parse EAS production update output
         id: parse-prod-update
@@ -228,6 +233,9 @@ jobs:
             --json 2>/dev/null > /tmp/eas-pr-update.json
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Inline EXPO_PUBLIC_* vars at bundle time — see deployment runbook §7.
+          EXPO_PUBLIC_API_BASE_URL: https://pear-sandbox.everbetter.com
+          EXPO_PUBLIC_DEMO_BEARER_TOKEN: c80141b0-1531-4896-b5e6-0b51f0ed31ce
 
       - name: Parse EAS PR update output
         id: parse-pr-update
