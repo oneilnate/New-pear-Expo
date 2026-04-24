@@ -53,8 +53,8 @@ F3-E4 implemented. Full player screen at /food/player + audio playback.
 
 See `index.ts` for the full export list. Key exports:
 - Types: `Pod`, `Meal`, `Podcast`, `PodStatus`, `MealStatus`, `CreateMealResponse`
-- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `useUploadMeal`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`, `useTuneIn`, `useEpisode`, `useAudioPlayer`
-- Components: `PodGrid`, `PodCounter`, `FoodSnapCard`, `TuneInModal`, `PlayerControls`
+- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `useUploadMeal`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`, `useCurrentPod`, `useTuneIn`, `useEpisode`, `useAudioPlayer`
+- Components: `PodGrid`, `PodCounter`, `FoodSnapCard`, `TuneInModal`, `PlayerControls`, `StartNewPodButton`
 - Types: `Episode`, `AudioPlayerState`
 
 ## Closed-loop check
@@ -66,3 +66,14 @@ pnpm lint
 ```
 
 All three must exit 0 before committing changes to this module.
+
+F7 (exe_VKuAAzpN) implemented. Dynamic current pod + 7-dot grid + StartNewPodButton.
+- getCurrentPod() added to food.service.ts (GET /api/pods/current)
+- useCurrentPod() React Query hook (staleTime: 10s); foodQueryKeys.currentPod added
+- DEMO_POD_ID removed from all production paths (index.tsx, capture.tsx, player.tsx)
+  now read podId from useCurrentPod().data?.id
+- PodGrid updated: dot count now driven by targetCount prop (COLUMNS=7);
+  totalDots = targetCount > 0 ? targetCount : 7; maintains IMG_5116/5117 visual style
+- StartNewPodButton added: secondary style, always visible on Home screen;
+  tap -> POST /api/pods -> invalidate currentPod query -> reset FoodPodProvider
+  -> router.replace('/food/capture')
