@@ -20,7 +20,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import type { PodStateResponse } from '@/services/food.service';
+import type { ImageAsset, PodStateResponse, UploadMealResponse } from '@/services/food.service';
 import {
   completePod,
   createMeal,
@@ -29,6 +29,7 @@ import {
   getPodcast,
   getPodState,
   patchMeal,
+  uploadMeal,
   uploadMealImage,
 } from '@/services/food.service';
 import type { CreateMealResponse, Pod, Podcast } from './types';
@@ -114,6 +115,24 @@ export function usePodStatus(podId: string): UseQueryResult<Pod, Error> {
     refetchInterval: (query) => {
       const pod = query.state.data;
       return pod?.status === 'generating' ? 2000 : false;
+    },
+  });
+}
+
+/**
+ * POST /api/pods/:podId/images — upload a captured JPEG meal image.
+ * On success, invalidates the podState query so the home grid auto-refreshes.
+ * On error, surfaces the error message to the caller.
+ */
+export function useUploadMeal(
+  podId: string,
+): UseMutationResult<UploadMealResponse, Error, ImageAsset> {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (asset: ImageAsset) => uploadMeal(podId, asset),
+    onSuccess: () => {
+      // Invalidate podState so home grid dot count increments automatically
+      void queryClient.invalidateQueries({ queryKey: foodQueryKeys.podState(podId) });
     },
   });
 }

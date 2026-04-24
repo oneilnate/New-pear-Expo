@@ -163,5 +163,48 @@ export async function getPodState(podId: string): Promise<PodStateResponse> {
   return parseResponse<PodStateResponse>(res);
 }
 
+// ─── Multipart image upload ───────────────────────────────────────────────────
+
+export type UploadMealResponse = {
+  imageId: string;
+  sequenceNumber: number;
+  capturedCount: number;
+};
+
+export type ImageAsset = {
+  uri: string;
+  width?: number;
+  height?: number;
+  type?: string;
+  fileName?: string | null;
+};
+
+/**
+ * POST /api/pods/:podId/images — upload a JPEG image via multipart/form-data.
+ * Field name: 'image'. Returns { imageId, sequenceNumber, capturedCount }.
+ * Does NOT include Content-Type header (browser/RN sets boundary automatically).
+ */
+export async function uploadMeal(podId: string, asset: ImageAsset): Promise<UploadMealResponse> {
+  const formData = new FormData();
+  // React Native FormData accepts { uri, name, type } as the file value
+  formData.append('image', {
+    uri: asset.uri,
+    name: 'meal.jpg',
+    type: 'image/jpeg',
+  } as unknown as Blob);
+
+  const token = getBearerToken();
+  const res = await fetch(`${getApiBaseUrl()}/api/pods/${podId}/images`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // NOTE: Do NOT set Content-Type — fetch sets it automatically with the
+      // correct multipart boundary when body is FormData.
+    },
+    body: formData,
+  });
+  return parseResponse<UploadMealResponse>(res);
+}
+
 // Re-export Meal type so consumers can import from service if preferred
 export type { Meal } from '@/modules/food/types';
