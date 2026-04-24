@@ -6,6 +6,12 @@ A food-pod-only Expo app. Capture meals, get a personalised nutrition podcast.
 
 ---
 
+## Demo mode
+
+Ready to run the demo in front of stakeholders? See **[DEMO.md](DEMO.md)** for the complete runbook: VM setup, pod reset, iOS Simulator walkthrough, troubleshooting, and per-demo cost breakdown.
+
+---
+
 ## Architecture
 
 Two repos, one deliverable:
