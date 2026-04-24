@@ -23,6 +23,7 @@ export {
   usePodcast,
   usePodState,
   usePodStatus,
+  useUploadMeal,
   useUploadMealImage,
 } from './hooks';
 

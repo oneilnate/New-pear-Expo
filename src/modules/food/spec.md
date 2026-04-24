@@ -26,11 +26,15 @@ Owns:
 F3-E1 implemented. usePodState hook + PodGrid/PodCounter/FoodSnapCard components
 added. Home screen (/food) pixel-matches IMG_5116/IMG_5117.
 
+F3-E2 implemented. useUploadMeal hook added. Calls uploadMeal() service (POST
+/api/pods/:podId/images multipart) and invalidates podState query on success so
+home grid auto-refreshes.
+
 ## Public API
 
 See `index.ts` for the full export list. Key exports:
 - Types: `Pod`, `Meal`, `Podcast`, `PodStatus`, `MealStatus`, `CreateMealResponse`
-- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`
+- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `useUploadMeal`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`
 - Components: `PodGrid`, `PodCounter`, `FoodSnapCard`
 
 ## Closed-loop check
