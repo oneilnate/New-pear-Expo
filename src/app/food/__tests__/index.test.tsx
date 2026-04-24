@@ -10,7 +10,7 @@
  * - Not Now: dismisses modal (flag persisted via expo-secure-store mock)
  * - Modal does not re-show after Not Now dismissal
  *
- * Mocks: MSW intercepts GET /api/pods/pod_demo_01, expo-router mocked
+ * Mocks: MSW intercepts GET /api/pods/current, expo-router mocked
  *
  * F3-E1: loading / success / error / unlocked states
  * F3-E3: Tune In modal auto-show, Not Now dismiss, re-open via banner
@@ -23,6 +23,7 @@ import { setupServer } from 'msw/node';
 // biome-ignore lint/style/useImportType: vitest-native requires React as value (not type) for JSX transform
 import React from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { FoodPodProvider } from '@/store/food-pod.store';
 
 // ── Mock expo-secure-store ─────────────────────────────────────────────────
 const secureStore: Record<string, string> = {};
@@ -78,7 +79,7 @@ const mockPodReady = {
 
 // ── MSW server ─────────────────────────────────────────────────────────────
 const server = setupServer(
-  http.get(`${BASE_URL}/api/pods/pod_demo_01`, () => HttpResponse.json(mockPodState)),
+  http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodState)),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -106,7 +107,11 @@ function makeQueryClient() {
 
 function renderWithQueryClient(ui: React.ReactElement, qc?: QueryClient) {
   const queryClient = qc ?? makeQueryClient();
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <FoodPodProvider>{ui}</FoodPodProvider>
+    </QueryClientProvider>,
+  );
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────
@@ -140,7 +145,7 @@ describe('FoodHomeScreen', () => {
 
   it('renders error state and retry button when fetch fails', async () => {
     server.use(
-      http.get(`${BASE_URL}/api/pods/pod_demo_01`, () =>
+      http.get(`${BASE_URL}/api/pods/current`, () =>
         HttpResponse.json({ error: 'Not Found' }, { status: 404 }),
       ),
     );
@@ -170,7 +175,7 @@ describe('FoodHomeScreen', () => {
 
   it('shows UNLOCKED state when capturedCount >= targetCount', async () => {
     server.use(
-      http.get(`${BASE_URL}/api/pods/pod_demo_01`, () =>
+      http.get(`${BASE_URL}/api/pods/current`, () =>
         HttpResponse.json({ ...mockPodState, capturedCount: 30, targetCount: 30 }),
       ),
     );
@@ -185,7 +190,7 @@ describe('FoodHomeScreen', () => {
   });
 
   it('shows Tune In modal when status=ready and episode is non-null', async () => {
-    server.use(http.get(`${BASE_URL}/api/pods/pod_demo_01`, () => HttpResponse.json(mockPodReady)));
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
 
     const { queryByLabelText, getByText } = renderWithQueryClient(<FoodHomeScreen />);
 
@@ -202,7 +207,7 @@ describe('FoodHomeScreen', () => {
   });
 
   it('dismisses modal and persists flag when "Not Now" is pressed', async () => {
-    server.use(http.get(`${BASE_URL}/api/pods/pod_demo_01`, () => HttpResponse.json(mockPodReady)));
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
 
     const { queryByLabelText, getByLabelText, queryByText } = renderWithQueryClient(
       <FoodHomeScreen />,
@@ -235,7 +240,7 @@ describe('FoodHomeScreen', () => {
     // Pre-seed the dismissal flag
     secureStore.tune_in_dismissed_pod_demo_01 = 'true';
 
-    server.use(http.get(`${BASE_URL}/api/pods/pod_demo_01`, () => HttpResponse.json(mockPodReady)));
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
 
     const { queryByLabelText, queryByText } = renderWithQueryClient(<FoodHomeScreen />);
 
@@ -250,7 +255,7 @@ describe('FoodHomeScreen', () => {
   });
 
   it('Tune In button is accessible and can be pressed when modal is shown', async () => {
-    server.use(http.get(`${BASE_URL}/api/pods/pod_demo_01`, () => HttpResponse.json(mockPodReady)));
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
 
     const { queryByLabelText, getByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
 

@@ -33,18 +33,17 @@ import {
   View,
 } from 'react-native';
 
-import { PlayerControls, useAudioPlayer, useEpisode } from '@/modules/food';
-
-/** Hardcoded demo pod ID matching F3-E1 spec */
-const DEMO_POD_ID = 'pod_demo_01';
+import { PlayerControls, useAudioPlayer, useCurrentPod, useEpisode } from '@/modules/food';
 
 const SKIP_MS = 15_000;
 
 export default function FoodPlayerScreen() {
   const router = useRouter();
-  // podId can be passed as a search param; fallback to demo pod
+  // podId: route param takes precedence; falls back to GET /api/pods/current
+  // F7 (exe_VKuAAzpN): replaced hardcoded DEMO_POD_ID fallback with useCurrentPod()
   const params = useLocalSearchParams<{ podId?: string }>();
-  const podId = params.podId ?? DEMO_POD_ID;
+  const { data: currentPod } = useCurrentPod();
+  const podId = params.podId ?? currentPod?.id ?? '';
 
   const { data: episode, isLoading, isError, error, refetch } = useEpisode(podId);
 

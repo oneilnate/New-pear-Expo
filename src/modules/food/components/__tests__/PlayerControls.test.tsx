@@ -15,7 +15,7 @@
  */
 
 import { fireEvent, render } from '@testing-library/react-native';
-// biome-ignore lint/style/useImportType: React value import required for JSX transform in vitest-native
+// biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 

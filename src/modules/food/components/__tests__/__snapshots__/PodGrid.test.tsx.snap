@@ -32,14 +32,14 @@ exports[`PodGrid > matches snapshot (29/30 state) 1`] = `
       accessibilityLabel="Captured meal 6"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
     />
-  </View>
-  <View
-    style={{"flexDirection":"row","gap":16}}
-  >
     <View
       accessibilityLabel="Captured meal 7"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
     />
+  </View>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
     <View
       accessibilityLabel="Captured meal 8"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
@@ -60,10 +60,6 @@ exports[`PodGrid > matches snapshot (29/30 state) 1`] = `
       accessibilityLabel="Captured meal 12"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
     />
-  </View>
-  <View
-    style={{"flexDirection":"row","gap":16}}
-  >
     <View
       accessibilityLabel="Captured meal 13"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
@@ -72,6 +68,10 @@ exports[`PodGrid > matches snapshot (29/30 state) 1`] = `
       accessibilityLabel="Captured meal 14"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
     />
+  </View>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
     <View
       accessibilityLabel="Captured meal 15"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
@@ -88,10 +88,6 @@ exports[`PodGrid > matches snapshot (29/30 state) 1`] = `
       accessibilityLabel="Captured meal 18"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
     />
-  </View>
-  <View
-    style={{"flexDirection":"row","gap":16}}
-  >
     <View
       accessibilityLabel="Captured meal 19"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
@@ -104,6 +100,10 @@ exports[`PodGrid > matches snapshot (29/30 state) 1`] = `
       accessibilityLabel="Captured meal 21"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
     />
+  </View>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
     <View
       accessibilityLabel="Captured meal 22"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
@@ -116,10 +116,6 @@ exports[`PodGrid > matches snapshot (29/30 state) 1`] = `
       accessibilityLabel="Captured meal 24"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
     />
-  </View>
-  <View
-    style={{"flexDirection":"row","gap":16}}
-  >
     <View
       accessibilityLabel="Captured meal 25"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
@@ -136,6 +132,10 @@ exports[`PodGrid > matches snapshot (29/30 state) 1`] = `
       accessibilityLabel="Captured meal 28"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}
     />
+  </View>
+  <View
+    style={{"flexDirection":"row","gap":16}}
+  >
     <View
       accessibilityLabel="Captured meal 29"
       style={[{"width":12,"height":12,"borderRadius":6},{"backgroundColor":"#15803D"}]}

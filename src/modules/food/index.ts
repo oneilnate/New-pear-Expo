@@ -16,6 +16,7 @@ export type { PodCounterProps } from './components/PodCounter';
 export { PodCounter } from './components/PodCounter';
 export type { PodGridProps } from './components/PodGrid';
 export { PodGrid } from './components/PodGrid';
+export { StartNewPodButton } from './components/StartNewPodButton';
 // TuneIn
 export type { TuneInModalProps } from './components/TuneInModal';
 export { TuneInModal } from './components/TuneInModal';
@@ -27,6 +28,7 @@ export {
   useCompletePod,
   useCreateMeal,
   useCreatePod,
+  useCurrentPod,
   useEpisode,
   usePatchMeal,
   usePodcast,
