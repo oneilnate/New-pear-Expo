@@ -17,7 +17,7 @@
 
 import { useRouter } from 'expo-router';
 // biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -34,6 +34,7 @@ import {
   PodGrid,
   StartNewPodButton,
   TuneInModal,
+  useCompletePod,
   useCurrentPod,
   useTuneIn,
 } from '@/modules/food';
@@ -44,6 +45,29 @@ export default function FoodHomeScreen() {
   const { data: podState, isLoading, isError, error, refetch } = useCurrentPod();
   const podId = podState?.id;
   const { showModal, openModal, dismissModal } = useTuneIn(podId ?? '', podState);
+
+  // ── Auto-trigger /complete when capturedCount === targetCount && status === 'collecting' ──
+  const completePod = useCompletePod();
+  const completeFiredRef = useRef<string | null>(null);
+  const [completeError, setCompleteError] = useState(false);
+
+  useEffect(() => {
+    if (!podId) return;
+    if (podState?.status !== 'collecting') return;
+    if ((podState?.capturedCount ?? 0) < (podState?.targetCount ?? 1)) return;
+    // Guard: fire ONCE per podId (ref tracks which pod we already fired for)
+    if (completeFiredRef.current === podId) return;
+    completeFiredRef.current = podId;
+    setCompleteError(false);
+    completePod.mutate(podId, {
+      onError: (err) => {
+        console.error('[FoodHomeScreen] /complete failed:', err);
+        setCompleteError(true);
+        // Reset ref so retry is possible
+        completeFiredRef.current = null;
+      },
+    });
+  }, [podId, podState?.status, podState?.capturedCount, podState?.targetCount, completePod.mutate]);
 
   function handleSnapPress() {
     router.push('/food/capture');
@@ -138,6 +162,26 @@ export default function FoodHomeScreen() {
           </View>
 
           <View style={styles.divider} />
+
+          {/* Generation failed — inline retry (only shown when /complete errors) */}
+          {completeError && (
+            <Pressable
+              onPress={() => {
+                if (!podId) return;
+                setCompleteError(false);
+                completePod.mutate(podId, {
+                  onError: (err) => {
+                    console.error('[FoodHomeScreen] /complete retry failed:', err);
+                    setCompleteError(true);
+                  },
+                });
+              }}
+              accessibilityLabel="Retry generating your FoodPod"
+              accessibilityRole="button"
+            >
+              <Text style={styles.generationFailedText}>Generation failed — Retry</Text>
+            </Pressable>
+          )}
 
           {/* Unlocked banner (30/30 state) */}
           {isGridUnlocked ? (
@@ -385,5 +429,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  generationFailedText: {
+    fontSize: 13,
+    color: '#DC2626',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
