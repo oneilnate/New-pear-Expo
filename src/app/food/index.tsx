@@ -111,14 +111,23 @@ export default function FoodHomeScreen() {
   }
 
   // ── Success state ─────────────────────────────────────────────────────────
-  const { capturedCount, targetCount } = podState;
+  const { capturedCount, targetCount, status } = podState;
   // Grid UNLOCKED: capturedCount >= targetCount (visual state on home screen)
   const isGridUnlocked = capturedCount >= targetCount;
+  // Suppress the Unlocked banner + Tune-In CTA when the pod failed — only the
+  // inline "Generation failed — Retry" Pressable should be visible below the divider.
+  const showUnlockedBanner = isGridUnlocked && status !== 'failed';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Tune In modal — auto-shown on first unlock, re-openable via button */}
-      <TuneInModal visible={showModal} onTuneIn={handleTuneIn} onNotNow={handleNotNow} />
+      {/* Guard: do not auto-open modal when pod failed (useTuneIn also requires
+          status==='ready', but explicit here for clarity). */}
+      <TuneInModal
+        visible={showModal && status !== 'failed'}
+        onTuneIn={handleTuneIn}
+        onNotNow={handleNotNow}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -183,8 +192,8 @@ export default function FoodHomeScreen() {
             </Pressable>
           )}
 
-          {/* Unlocked banner (30/30 state) */}
-          {isGridUnlocked ? (
+          {/* Unlocked banner (30/30 state) — hidden when pod.status === 'failed' */}
+          {showUnlockedBanner ? (
             <View
               style={styles.unlockedBanner}
               accessibilityLabel="Food Pod unlocked"
@@ -221,9 +230,9 @@ export default function FoodHomeScreen() {
                 <Text style={styles.tuneInCtaText}>Tune In</Text>
               </Pressable>
             </View>
-          ) : (
+          ) : !isGridUnlocked ? (
             <Text style={styles.recentSnapsLabel}>RECENT SNAPS</Text>
-          )}
+          ) : null}
         </View>
 
         {/* Food Snap CTA */}

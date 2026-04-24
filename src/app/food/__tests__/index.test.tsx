@@ -176,7 +176,7 @@ describe('FoodHomeScreen', () => {
   it('shows UNLOCKED state when capturedCount >= targetCount', async () => {
     server.use(
       http.get(`${BASE_URL}/api/pods/current`, () =>
-        HttpResponse.json({ ...mockPodState, capturedCount: 30, targetCount: 30 }),
+        HttpResponse.json({ ...mockPodState, capturedCount: 30, targetCount: 30, status: 'ready' }),
       ),
     );
 
