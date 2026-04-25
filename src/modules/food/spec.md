@@ -79,6 +79,14 @@ F8 (exe_n8VFR9XQ) implemented. Audio error surfacing + player layout fix.
 - player.tsx: sheet layout changed from `maxHeight: '55%'` to `height: '50%'` so PlayerControls
   are always visible regardless of scroll content height.
 
+F10 (exe_nsWeSN5I) implemented. Trust backend polling for pod status, not mutation errors.
+- useCurrentPod: added refetchInterval (2s when status === 'generating') so home screen
+  picks up ready/failed within ~2-3s after backend completes the Gemini pipeline.
+- FoodHomeScreen: removed completeError local state; "Generation failed — Retry" now driven
+  solely by podState.status === 'failed' (backend source of truth). On /complete mutation
+  error (e.g. timeout), invalidates currentPod query and shows "Generating your FoodPod..."
+  indicator instead of premature failure banner.
+
 F7 (exe_VKuAAzpN) implemented. Dynamic current pod + 7-dot grid + StartNewPodButton.
 - getCurrentPod() added to food.service.ts (GET /api/pods/current)
 - useCurrentPod() React Query hook (staleTime: 10s); foodQueryKeys.currentPod added
