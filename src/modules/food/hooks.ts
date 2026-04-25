@@ -150,8 +150,10 @@ export function useUploadMeal(
   return useMutation({
     mutationFn: (asset: ImageAsset) => uploadMeal(podId, asset),
     onSuccess: () => {
-      // Invalidate podState so home grid dot count increments automatically
+      // Invalidate both the per-pod state AND the currentPod query
+      // (home screen reads currentPod — different cache key from podState)
       void queryClient.invalidateQueries({ queryKey: foodQueryKeys.podState(podId) });
+      void queryClient.invalidateQueries({ queryKey: foodQueryKeys.currentPod });
     },
   });
 }

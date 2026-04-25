@@ -3,7 +3,7 @@
  *
  * Verifies:
  *   - Calls uploadMeal service on mutate
- *   - Invalidates podState query on success so home grid auto-refreshes
+ *   - Invalidates podState AND currentPod queries on success so home counter/grid auto-refreshes
  *   - Surfaces error message to caller on failure
  *
  * F3-E2 — src/modules/food/__tests__/hooks.uploadMeal.test.tsx
@@ -17,7 +17,7 @@ import { setupServer } from 'msw/node';
 import React from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { useUploadMeal } from '../hooks';
+import { foodQueryKeys, useUploadMeal } from '../hooks';
 
 // ─── Environment ─────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ describe('useUploadMeal', () => {
     });
   });
 
-  it('invalidates podState query on success so home grid refetches', async () => {
+  it('invalidates podState and currentPod queries on success so home counter and grid refetch', async () => {
     const queryClient = makeQueryClient();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
@@ -104,9 +104,17 @@ describe('useUploadMeal', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
+    // podState must be invalidated so the food grid dot count updates
     expect(invalidateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        queryKey: ['podState', 'pod_demo_01'],
+        queryKey: foodQueryKeys.podState('pod_demo_01'),
+      }),
+    );
+
+    // currentPod must also be invalidated so the home counter (N/7) updates immediately
+    expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: foodQueryKeys.currentPod,
       }),
     );
   });

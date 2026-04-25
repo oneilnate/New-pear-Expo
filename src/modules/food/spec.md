@@ -32,8 +32,8 @@ on the right using Ionicons camera-outline. Copy updated to 'Snap food &
 beverages' / 'Capture your next food-item to progress'. Removed chevron arrow.
 
 F3-E2 implemented. useUploadMeal hook added. Calls uploadMeal() service (POST
-/api/pods/:podId/images multipart) and invalidates podState query on success so
-home grid auto-refreshes.
+/api/pods/:podId/images multipart) and invalidates podState and currentPod queries
+on success so home grid dots and N/7 counter auto-refresh immediately after snap.
 
 F3-E3 implemented. TuneInModal component + useTuneIn hook added.
 - isUnlocked: status === 'ready' && episode != null
