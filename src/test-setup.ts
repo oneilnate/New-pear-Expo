@@ -19,6 +19,17 @@
 // inline, which overrides this global mock.
 import { vi } from 'vitest';
 
+// Allow Node's CJS loader to handle binary asset files (PNG, JPG, etc.)
+// that React Native requires at component load time. Without this, Node throws
+// "SyntaxError: Invalid or unexpected token" when it encounters binary image bytes.
+type CjsLoader = { extensions: Record<string, (mod: { exports: unknown }) => void> };
+const cjsLoader = require as unknown as CjsLoader;
+for (const ext of ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg']) {
+  cjsLoader.extensions[ext] = (mod) => {
+    mod.exports = 1;
+  };
+}
+
 vi.mock('expo-av');
 vi.mock('expo-router', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
