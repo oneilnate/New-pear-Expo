@@ -81,4 +81,4 @@ F7 (exe_VKuAAzpN) implemented. Dynamic current pod + 7-dot grid + StartNewPodBut
   totalDots = targetCount > 0 ? targetCount : 7; maintains IMG_5116/5117 visual style
 - StartNewPodButton added: secondary style, always visible on Home screen;
   tap -> POST /api/pods -> invalidate currentPod query -> reset FoodPodProvider
-  -> router.replace('/food/capture')
+  -> stays on home screen (user sees fresh 0/7 pod; no navigation to /food/capture)

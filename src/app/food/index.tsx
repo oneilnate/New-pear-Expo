@@ -292,8 +292,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   foodSnapWordmark: {
-    width: 130,
-    height: 32,
+    width: 169,
+    height: 42,
   },
   counterText: {
     fontSize: 20,
