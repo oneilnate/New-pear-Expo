@@ -52,6 +52,12 @@ const config: ExpoConfig = {
       },
     ],
     [
+      'expo-camera',
+      {
+        cameraPermission: 'Allow $(PRODUCT_NAME) to access your camera to photograph your meals.',
+      },
+    ],
+    [
       'expo-image-picker',
       {
         photosPermission: 'Allow $(PRODUCT_NAME) to access your photos for meal capture.',
