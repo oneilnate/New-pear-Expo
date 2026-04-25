@@ -51,13 +51,18 @@ export const foodQueryKeys = {
 /**
  * GET /api/pods/current — fetches the current (newest) pod for the demo user.
  * Auto-creates if none exists. Returns PodStateResponse shape.
- * staleTime: 10 s (matches usePodState)
+ * staleTime: 10 s normally; polls every 2 s when status === 'generating'
+ * so the home screen picks up ready/failed within ~2-3 s after backend completes.
  */
 export function useCurrentPod(): UseQueryResult<PodStateResponse, Error> {
   return useQuery({
     queryKey: foodQueryKeys.currentPod,
     queryFn: () => getCurrentPod(),
     staleTime: 10_000,
+    refetchInterval: (query) => {
+      const pod = query.state.data;
+      return pod?.status === 'generating' ? 2000 : false;
+    },
   });
 }
 

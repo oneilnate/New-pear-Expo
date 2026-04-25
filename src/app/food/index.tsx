@@ -15,9 +15,10 @@
  * F3-E3 — UNLOCKED state + Tune In modal
  */
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 // biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -29,9 +30,9 @@ import {
   Text,
   View,
 } from 'react-native';
-
 import {
   FoodSnapCard,
+  foodQueryKeys,
   PodGrid,
   StartNewPodButton,
   TuneInModal,
@@ -48,9 +49,9 @@ export default function FoodHomeScreen() {
   const { showModal, openModal, dismissModal } = useTuneIn(podId ?? '', podState);
 
   // ── Auto-trigger /complete when capturedCount === targetCount && status === 'collecting' ──
+  const queryClient = useQueryClient();
   const completePod = useCompletePod();
   const completeFiredRef = useRef<string | null>(null);
-  const [completeError, setCompleteError] = useState(false);
 
   useEffect(() => {
     if (!podId) return;
@@ -59,16 +60,25 @@ export default function FoodHomeScreen() {
     // Guard: fire ONCE per podId (ref tracks which pod we already fired for)
     if (completeFiredRef.current === podId) return;
     completeFiredRef.current = podId;
-    setCompleteError(false);
     completePod.mutate(podId, {
       onError: (err) => {
-        console.error('[FoodHomeScreen] /complete failed:', err);
-        setCompleteError(true);
-        // Reset ref so retry is possible
+        // Network timeout or transient error — backend may still be generating.
+        // Do NOT show the failed banner: trust podState.status === 'failed' from polling.
+        console.error('[FoodHomeScreen] /complete failed (may be timeout):', err);
+        // Invalidate so polling refetches real status immediately.
+        void queryClient.invalidateQueries({ queryKey: foodQueryKeys.currentPod });
+        // Reset ref so retry is possible when status flips back to 'collecting'.
         completeFiredRef.current = null;
       },
     });
-  }, [podId, podState?.status, podState?.capturedCount, podState?.targetCount, completePod.mutate]);
+  }, [
+    podId,
+    podState?.status,
+    podState?.capturedCount,
+    podState?.targetCount,
+    completePod.mutate,
+    queryClient,
+  ]);
 
   function handleSnapPress() {
     router.push('/food/capture');
@@ -169,16 +179,24 @@ export default function FoodHomeScreen() {
 
           <View style={styles.divider} />
 
-          {/* Generation failed — inline retry (only shown when /complete errors) */}
-          {completeError && (
+          {/* Generating indicator — shown while backend pipeline is running */}
+          {isGridUnlocked && status === 'generating' && (
+            <View style={styles.generatingRow} accessibilityLabel="Generating your FoodPod">
+              <ActivityIndicator size="small" color="#15803D" />
+              <Text style={styles.generatingText}>Generating your FoodPod…</Text>
+            </View>
+          )}
+
+          {/* Generation failed — shown ONLY when backend sets status to 'failed' */}
+          {status === 'failed' && (
             <Pressable
               onPress={() => {
                 if (!podId) return;
-                setCompleteError(false);
+                completeFiredRef.current = null;
                 completePod.mutate(podId, {
                   onError: (err) => {
-                    console.error('[FoodHomeScreen] /complete retry failed:', err);
-                    setCompleteError(true);
+                    console.error('[FoodHomeScreen] /complete retry failed (may be timeout):', err);
+                    void queryClient.invalidateQueries({ queryKey: foodQueryKeys.currentPod });
                   },
                 });
               }}
@@ -407,6 +425,16 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  generatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  generatingText: {
+    fontSize: 13,
+    color: '#15803D',
     fontWeight: '600',
   },
   generationFailedText: {
