@@ -1,31 +1,34 @@
 /**
  * Capture screen — /food/capture
  *
+ * Embedded expo-camera CameraView — single-screen branded capture.
+ * Replaces expo-image-picker.launchCameraAsync() to eliminate the native
+ * UIImagePickerController modal and its "Retake / Use Photo" native preview.
+ *
  * Flow:
- * 1. On mount, request camera permission via expo-image-picker.
- * 2. If denied → show "Camera access required" message + Settings deep link.
- * 3. If granted → immediately launch ImagePicker.launchCameraAsync().
- * 4. On capture → show preview + "Use this photo" / "Retake" buttons.
- * 5. On "Use this photo" → uploadMeal mutation → router.replace('/food') on success.
- * 6. On error → show error banner + Retry button.
- * 7. On "Retake" → relaunch camera.
+ * 1. On mount, check camera permission via useCameraPermissions().
+ * 2. If !granted → show in-app PermissionPrompt (Pressable → requestPermission).
+ * 3. If granted → show embedded <CameraView> with branded shutter button.
+ * 4. Shutter tap → takePictureAsync() → phase='preview' (same screen, no remount).
+ * 5. "Use this photo" → uploadMeal.mutateAsync() → router.back().
+ * 6. "Retake" → phase='camera' (no re-permission, no remount).
+ * 7. Back button → router.back() at any phase.
  *
  * Architecture contract:
  * - JSX + local state only. No fetch() calls.
  * - All upload logic via useUploadMeal from @/modules/food.
  * - Navigation via expo-router useRouter.
  *
- * F3-E2 — Camera capture flow (expo-image-picker → upload)
+ * exe_EEE0f1rK — Branded camera capture (replace native picker)
  */
 
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useFocusEffect, useRouter } from 'expo-router';
+// biome-ignore lint/correctness/noUnusedImports: React needed in scope for JSX (vitest-native test environment)
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Linking,
-  Platform,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -35,156 +38,176 @@ import {
 
 import { useCurrentPod, useUploadMeal } from '@/modules/food';
 
-type ScreenState =
-  | { phase: 'requesting' } // awaiting permission result
-  | { phase: 'denied' } // permission denied
-  | { phase: 'camera' } // camera is opening / waiting
-  | { phase: 'preview'; uri: string } // photo taken, showing preview
-  | { phase: 'uploading'; uri: string } // upload in progress
-  | { phase: 'error'; uri: string; message: string }; // upload failed
+type Phase = 'camera' | 'preview' | 'uploading' | 'error';
 
-export default function CaptureScreen() {
+interface CaptureState {
+  phase: Phase;
+  uri: string | null;
+  errorMessage: string | null;
+  cameraActive: boolean;
+}
+
+const INITIAL_STATE: CaptureState = {
+  phase: 'camera',
+  uri: null,
+  errorMessage: null,
+  cameraActive: true,
+};
+
+// ── Permission Prompt ─────────────────────────────────────────────────────────
+
+interface PermissionPromptProps {
+  onGrant: () => void;
+  onBack: () => void;
+}
+
+function PermissionPrompt({ onGrant, onBack }: PermissionPromptProps) {
+  return (
+    <SafeAreaView style={styles.centered}>
+      <Text style={styles.iconText} accessibilityElementsHidden>
+        📷
+      </Text>
+      <Text style={styles.headingText}>Camera access required</Text>
+      <Text style={styles.bodyText}>Please allow camera access to photograph your meals.</Text>
+      <Pressable
+        style={styles.primaryButton}
+        onPress={onGrant}
+        accessibilityLabel="Allow camera access"
+        accessibilityRole="button"
+      >
+        <Text style={styles.primaryButtonText}>Allow Camera</Text>
+      </Pressable>
+      <Pressable
+        style={styles.ghostButton}
+        onPress={onBack}
+        accessibilityLabel="Go back to Food home"
+        accessibilityRole="button"
+      >
+        <Text style={styles.ghostButtonText}>Go back</Text>
+      </Pressable>
+    </SafeAreaView>
+  );
+}
+
+// ── Main Screen ───────────────────────────────────────────────────────────────
+
+export function CaptureScreen() {
   const router = useRouter();
-  const [state, setState] = useState<ScreenState>({ phase: 'requesting' });
-  // F7 (exe_VKuAAzpN): podId from useCurrentPod() instead of hardcoded DEMO_POD_ID
+  const [permission, requestPermission] = useCameraPermissions();
+  const [state, setState] = useState<CaptureState>(INITIAL_STATE);
+  const cameraRef = useRef<CameraView>(null);
+
   const { data: currentPod } = useCurrentPod();
   const podId = currentPod?.id ?? '';
   const { mutateAsync: upload } = useUploadMeal(podId);
 
-  // ── Camera launcher ──────────────────────────────────────────────────────
-  const launchCamera = useCallback(async () => {
-    setState({ phase: 'camera' });
+  // Pause camera when screen loses focus (battery saving)
+  useFocusEffect(
+    useCallback(() => {
+      setState((prev) => ({ ...prev, cameraActive: true }));
+      return () => {
+        setState((prev) => ({ ...prev, cameraActive: false }));
+      };
+    }, []),
+  );
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+
+  const handleShutter = useCallback(async () => {
+    if (!cameraRef.current) return;
     try {
-      const result = await ImagePicker.launchCameraAsync({
-        quality: 0.8,
-        mediaTypes: 'images',
-        allowsEditing: false,
-      });
-      if (result.canceled || !result.assets[0]) {
-        // User pressed cancel — go back to food home
-        router.replace('/food');
-        return;
-      }
-      const asset = result.assets[0];
-      setState({ phase: 'preview', uri: asset.uri });
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      if (!photo) return;
+      setState((prev) => ({ ...prev, phase: 'preview', uri: photo.uri, errorMessage: null }));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Camera failed to open';
-      setState({ phase: 'error', uri: '', message });
+      const msg = err instanceof Error ? err.message : 'Camera failed to capture';
+      setState((prev) => ({ ...prev, phase: 'error', errorMessage: msg }));
     }
-  }, [router]);
-
-  // Stable ref so the mount-only useEffect can call the latest launchCamera
-  // without needing it as a dependency (avoids infinite re-trigger).
-  const launchCameraRef = React.useRef(launchCamera);
-  launchCameraRef.current = launchCamera;
-
-  // ── Permission request on mount ───────────────────────────────────────────
-  // Empty deps array is intentional: runs once on mount.
-  // launchCameraRef.current always holds the latest version (ref pattern).
-  useEffect(() => {
-    let cancelled = false;
-    async function requestPermission() {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (cancelled) return;
-      if (status === 'granted') {
-        await launchCameraRef.current();
-      } else {
-        setState({ phase: 'denied' });
-      }
-    }
-    void requestPermission();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
-  // ── Upload handler ────────────────────────────────────────────────────────
-  async function handleUsePhoto(uri: string) {
-    setState({ phase: 'uploading', uri });
+  const handleRetake = useCallback(() => {
+    setState((_prev) => ({
+      phase: 'camera',
+      uri: null,
+      errorMessage: null,
+      cameraActive: true,
+    }));
+  }, []);
+
+  const handleUsePhoto = useCallback(async () => {
+    if (!state.uri) return;
+    const uri = state.uri;
+    setState((prev) => ({ ...prev, phase: 'uploading' }));
     try {
       await upload({ uri });
-      router.replace('/food');
+      router.back();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Upload failed. Please try again.';
-      setState({ phase: 'error', uri, message });
+      const msg = err instanceof Error ? err.message : 'Upload failed. Please try again.';
+      setState((prev) => ({ ...prev, phase: 'error', errorMessage: msg }));
     }
-  }
+  }, [state.uri, upload, router]);
 
-  // ── Open settings deep link ───────────────────────────────────────────────
-  async function openSettings() {
-    if (Platform.OS === 'ios') {
-      await Linking.openURL('app-settings:');
-    } else {
-      await Linking.openSettings();
-    }
-  }
+  // ── Permission not yet resolved ───────────────────────────────────────────
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
-  if (state.phase === 'requesting' || state.phase === 'camera') {
+  if (!permission) {
+    // useCameraPermissions is loading
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#15803D" accessibilityLabel="Opening camera" />
+        <ActivityIndicator
+          size="large"
+          color="#15803D"
+          accessibilityLabel="Checking camera permission"
+        />
       </SafeAreaView>
     );
   }
 
-  if (state.phase === 'denied') {
+  if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.centered}>
-        <Text style={styles.iconText} accessibilityElementsHidden>
-          📷
-        </Text>
-        <Text style={styles.headingText}>Camera access required</Text>
-        <Text style={styles.bodyText}>Please enable camera access in Settings to snap a meal.</Text>
-        <Pressable
-          style={styles.primaryButton}
-          onPress={() => void openSettings()}
-          accessibilityLabel="Open Settings to enable camera"
-          accessibilityRole="button"
-        >
-          <Text style={styles.primaryButtonText}>Open Settings</Text>
-        </Pressable>
-        <Pressable
-          style={styles.ghostButton}
-          onPress={() => router.replace('/food')}
-          accessibilityLabel="Go back to Food home"
-          accessibilityRole="button"
-        >
-          <Text style={styles.ghostButtonText}>Go back</Text>
-        </Pressable>
-      </SafeAreaView>
+      <PermissionPrompt onGrant={() => void requestPermission()} onBack={() => router.back()} />
     );
   }
+
+  // ── Preview / Uploading / Error phases ────────────────────────────────────
 
   if (state.phase === 'preview' || state.phase === 'uploading' || state.phase === 'error') {
-    const { uri } = state;
     const isUploading = state.phase === 'uploading';
-    const errorMessage = state.phase === 'error' ? state.message : null;
+    const hasError = state.phase === 'error';
 
     return (
       <SafeAreaView style={styles.container}>
+        {/* Back button */}
+        <Pressable
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <Text style={styles.backButtonText}>‹ Back</Text>
+        </Pressable>
+
         {/* Preview image */}
-        <Image
-          source={{ uri }}
-          style={styles.preview}
-          resizeMode="cover"
-          accessibilityLabel="Captured meal photo preview"
-        />
+        {state.uri !== null && (
+          <Image
+            source={{ uri: state.uri }}
+            style={styles.preview}
+            resizeMode="cover"
+            accessibilityLabel="Captured meal photo preview"
+          />
+        )}
 
         {/* Error banner */}
-        {errorMessage !== null && (
+        {hasError && state.errorMessage !== null && (
           <View style={styles.errorBanner} accessibilityRole="alert">
-            <Text style={styles.errorText}>{errorMessage}</Text>
+            <Text style={styles.errorText}>{state.errorMessage}</Text>
           </View>
         )}
 
         {/* Action buttons */}
         <View style={styles.actionBar}>
-          {/* Retake */}
           <Pressable
             style={[styles.secondaryButton, isUploading && styles.buttonDisabled]}
-            onPress={() => void launchCamera()}
+            onPress={handleRetake}
             disabled={isUploading}
             accessibilityLabel="Retake photo"
             accessibilityRole="button"
@@ -192,16 +215,15 @@ export default function CaptureScreen() {
             <Text style={styles.secondaryButtonText}>Retake</Text>
           </Pressable>
 
-          {/* Use this photo / Retry */}
           <Pressable
             style={[
               styles.primaryButton,
               styles.primaryButtonFlex,
               isUploading && styles.buttonDisabled,
             ]}
-            onPress={() => void handleUsePhoto(uri)}
+            onPress={() => void handleUsePhoto()}
             disabled={isUploading}
-            accessibilityLabel={errorMessage !== null ? 'Retry upload' : 'Use this photo'}
+            accessibilityLabel={hasError ? 'Retry upload' : 'Use this photo'}
             accessibilityRole="button"
           >
             {isUploading ? (
@@ -211,9 +233,7 @@ export default function CaptureScreen() {
                 accessibilityLabel="Uploading photo"
               />
             ) : (
-              <Text style={styles.primaryButtonText}>
-                {errorMessage !== null ? 'Retry' : 'Use this photo'}
-              </Text>
+              <Text style={styles.primaryButtonText}>{hasError ? 'Retry' : 'Use this photo'}</Text>
             )}
           </Pressable>
         </View>
@@ -221,9 +241,48 @@ export default function CaptureScreen() {
     );
   }
 
-  // Unreachable fallback — TypeScript exhaustiveness
-  return null;
+  // ── Camera phase (default) ────────────────────────────────────────────────
+
+  return (
+    <View style={styles.container}>
+      {/* Camera viewfinder */}
+      <CameraView
+        ref={cameraRef}
+        style={styles.camera}
+        facing="back"
+        active={state.cameraActive}
+        accessibilityLabel="Camera viewfinder"
+      />
+
+      {/* Back button + shutter overlay */}
+      <SafeAreaView style={styles.cameraOverlay} pointerEvents="box-none">
+        <Pressable
+          style={styles.backButton}
+          onPress={() => router.back()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <Text style={styles.backButtonText}>‹ Back</Text>
+        </Pressable>
+
+        {/* Branded shutter button */}
+        <View style={styles.shutterContainer}>
+          <Pressable
+            style={styles.shutterButton}
+            onPress={() => void handleShutter()}
+            accessibilityLabel="Take photo"
+            accessibilityRole="button"
+          />
+        </View>
+      </SafeAreaView>
+    </View>
+  );
 }
+
+// Default export required by expo-router file-based routing
+export default CaptureScreen;
+
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -237,6 +296,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 32,
     gap: 16,
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'space-between',
+  },
+  backButton: {
+    marginTop: 8,
+    marginLeft: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  shutterContainer: {
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  shutterButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
   },
   preview: {
     flex: 1,
