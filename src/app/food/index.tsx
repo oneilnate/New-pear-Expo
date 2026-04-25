@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Platform,
   Pressable,
   SafeAreaView,
@@ -139,21 +140,17 @@ export default function FoodHomeScreen() {
           {/* Card header */}
           <View style={styles.cardHeader}>
             <View style={styles.headerLeft}>
-              <View style={styles.headerIconWrap}>
-                <Text style={styles.headerIcon}>🍴</Text>
-              </View>
-              <Text style={styles.cardTitle}>Food Snap</Text>
+              <Image
+                source={require('../../../assets/images/food-snap-wordmark.png')}
+                style={styles.foodSnapWordmark}
+                resizeMode="contain"
+                accessibilityLabel="Food Snap"
+                accessibilityRole="image"
+              />
             </View>
-            <View style={styles.counterBadge}>
-              <View style={styles.counterBadgeIconWrap}>
-                <Text style={styles.counterBadgeIcon}>📷</Text>
-              </View>
-              <Text style={styles.counterBadgeText}>
-                {isGridUnlocked
-                  ? `${targetCount}/${targetCount}`
-                  : `${capturedCount}/${targetCount}`}
-              </Text>
-            </View>
+            <Text style={styles.counterText}>
+              {isGridUnlocked ? `${targetCount}/${targetCount}` : `${capturedCount}/${targetCount}`}
+            </Text>
           </View>
 
           {/* Description */}
@@ -294,39 +291,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  headerIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1A1A1A',
-    alignItems: 'center',
-    justifyContent: 'center',
+  foodSnapWordmark: {
+    width: 130,
+    height: 32,
   },
-  headerIcon: {
+  counterText: {
     fontSize: 20,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  counterBadge: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  counterBadgeIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#15803D',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  counterBadgeIcon: {
-    fontSize: 24,
-  },
-  counterBadgeText: {
-    fontSize: 13,
     fontWeight: '700',
     color: '#0F172A',
   },

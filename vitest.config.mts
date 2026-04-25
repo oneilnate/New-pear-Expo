@@ -1,8 +1,21 @@
+import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { reactNative } from 'vitest-native';
 
+/** Stub binary asset requires (PNG, JPG, GIF, etc.) so vitest doesn't try to parse image bytes as JS. */
+function assetStub(): Plugin {
+  return {
+    name: 'asset-stub',
+    transform(_code, id) {
+      if (/\.(png|jpe?g|gif|webp|svg)$/.test(id)) {
+        return { code: 'module.exports = 1;', map: null };
+      }
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [reactNative()],
+  plugins: [reactNative(), assetStub()],
   test: {
     globals: true,
     environment: 'node',
