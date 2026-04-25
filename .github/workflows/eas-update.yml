@@ -31,7 +31,7 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 1 — Production publish (push to main / version tags)
-  # Added in PR #34. DO NOT MODIFY this job — it publishes to the `production`
+  # Added in PR #34. DO NOT MODIFY this job — it publishes to the `main`
   # channel which is what live Expo Go users are pointed at.
   # ─────────────────────────────────────────────────────────────────────────────
   eas-update:
@@ -71,14 +71,14 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
 
-      - name: Publish OTA update to Expo Go (production channel)
+      - name: Publish OTA update to Expo Go (main channel)
         id: eas-update
         continue-on-error: true
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%s)
           eas update \
-            --channel production \
-            --branch production \
+            --channel main \
+            --branch main \
             --message "${COMMIT_MSG}" \
             --non-interactive \
             --json 2>/dev/null > /tmp/eas-prod-update.json
@@ -109,7 +109,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const sentinel    = '<!-- obvious-expo-go-update:v1 -->';
-            const projectId   = '28a85fb2-e56c-4a53-a398-0080b43414ea';
+            const projectId   = '80d682b2-9c28-4d81-8b5a-bb09e6dd1e79';
             const account     = 'nateoutsidethebox';
             const projectSlug = 'food-pod';
             const updateGroup = '${{ steps.parse-prod-update.outputs.update_group }}';
@@ -128,7 +128,7 @@ jobs:
             } else {
               const dashboardUrl = `https://expo.dev/accounts/${account}/projects/${projectSlug}/updates/${updateGroup}`;
               const qrUrl = `https://qr.expo.dev/eas-update?groupId=${updateGroup}&appScheme=foodpod&host=u.expo.dev`;
-              const rawUrl = `exp://u.expo.dev/${projectId}?channel-name=production&runtime-version=${rtv}&platform=ios`;
+              const rawUrl = `exp://u.expo.dev/${projectId}?channel-name=main&runtime-version=${rtv}&platform=ios`;
               body = [
                 sentinel,
                 '## 📱 Expo Go — OTA Update',
@@ -256,7 +256,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const sentinel    = '<!-- obvious-expo-go-pr-preview:v1 -->';
-            const projectId   = '28a85fb2-e56c-4a53-a398-0080b43414ea';
+            const projectId   = '80d682b2-9c28-4d81-8b5a-bb09e6dd1e79';
             const account     = 'nateoutsidethebox';
             const projectSlug = 'food-pod';
             const prNumber    = context.issue.number;
