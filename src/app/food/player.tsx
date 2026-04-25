@@ -157,6 +157,20 @@ export default function FoodPlayerScreen() {
             <Text style={styles.timerText}>{timerDisplay}</Text>
           </View>
         </View>
+
+        {/* PlayerControls — moved up into black area so play button is above the fold */}
+        <View style={styles.controlsContainer}>
+          <PlayerControls
+            isPlaying={isPlaying}
+            positionMillis={positionMillis}
+            durationMillis={displayDuration}
+            onPlay={() => void play()}
+            onPause={() => void pause()}
+            onSeek={(ms) => void seek(ms)}
+            onSkipBack={() => void seek(Math.max(0, positionMillis - SKIP_MS))}
+            onSkipForward={() => void seek(Math.min(displayDuration, positionMillis + SKIP_MS))}
+          />
+        </View>
       </SafeAreaView>
 
       {/* ── White bottom sheet ──────────────────────────────────────────── */}
@@ -184,18 +198,6 @@ export default function FoodPlayerScreen() {
 
           {/* Summary text */}
           <Text style={styles.episodeSummary}>{episode?.summary ?? ''}</Text>
-
-          {/* Audio controls — rendered below summary */}
-          <PlayerControls
-            isPlaying={isPlaying}
-            positionMillis={positionMillis}
-            durationMillis={displayDuration}
-            onPlay={() => void play()}
-            onPause={() => void pause()}
-            onSeek={(ms) => void seek(ms)}
-            onSkipBack={() => void seek(Math.max(0, positionMillis - SKIP_MS))}
-            onSkipForward={() => void seek(Math.min(displayDuration, positionMillis + SKIP_MS))}
-          />
         </ScrollView>
       </View>
     </View>
@@ -267,7 +269,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A0A0A',
   },
   blackArea: {
-    flex: 1,
+    flex: 0,
   },
   topBackButton: {
     position: 'absolute',
@@ -285,9 +287,10 @@ const styles = StyleSheet.create({
     lineHeight: 36,
   },
   titleArea: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 60,
+    paddingBottom: 16,
   },
   bigTitle: {
     color: '#FFFFFF',
@@ -297,6 +300,11 @@ const styles = StyleSheet.create({
   },
   timerPillContainer: {
     alignItems: 'center',
+    paddingBottom: 12,
+  },
+  controlsContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
     paddingBottom: 24,
   },
   timerPill: {
