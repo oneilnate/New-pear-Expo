@@ -80,6 +80,10 @@ const mockPodReady = {
 // ── MSW server ─────────────────────────────────────────────────────────────
 const server = setupServer(
   http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodState)),
+  // Default: complete endpoint succeeds silently (returns the pod)
+  http.post(`${BASE_URL}/api/pods/:podId/complete`, () =>
+    HttpResponse.json({ id: 'pod_demo_01', status: 'generating' }),
+  ),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -277,5 +281,91 @@ describe('FoodHomeScreen', () => {
     await waitFor(() => {
       expect(queryByLabelText('Not Now — dismiss Tune In modal')).toBeNull();
     });
+  });
+
+  // ── Polling-trust tests (F10) ────────────────────────────────────────────
+
+  it('mutation error + status collecting: does not show failed banner, no Retry pressable', async () => {
+    // Pod is at 7/7 collecting — auto-complete fires; endpoint returns error
+    const collectingFull = {
+      id: 'pod_demo_01',
+      status: 'collecting',
+      targetCount: 7,
+      capturedCount: 7,
+      recentSnaps: [],
+      episode: null,
+    };
+    server.use(
+      http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(collectingFull)),
+      http.post(`${BASE_URL}/api/pods/:podId/complete`, () =>
+        HttpResponse.json({ error: 'timeout' }, { status: 504 }),
+      ),
+    );
+
+    const { queryByLabelText, queryByText } = renderWithQueryClient(<FoodHomeScreen />);
+
+    // Wait for data to load
+    await waitFor(() => {
+      expect(queryByLabelText('Loading Food Pod')).toBeNull();
+    });
+
+    // Give mutation time to fire and error handler to run
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    // No "Generation failed — Retry" should appear — only backend status drives this
+    expect(queryByText('Generation failed — Retry')).toBeNull();
+    expect(queryByLabelText('Retry generating your FoodPod')).toBeNull();
+  });
+
+  it('status failed: shows failed banner with Retry pressable (backend-driven)', async () => {
+    // Backend explicitly sets status to 'failed'
+    const failedPod = {
+      id: 'pod_demo_01',
+      status: 'failed',
+      targetCount: 7,
+      capturedCount: 7,
+      recentSnaps: [],
+      episode: null,
+    };
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(failedPod)));
+
+    const { queryByLabelText, getByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
+
+    await waitFor(() => {
+      expect(queryByLabelText('Loading Food Pod')).toBeNull();
+    });
+
+    // Failed banner MUST be visible
+    await waitFor(() => {
+      expect(getByLabelText('Retry generating your FoodPod')).toBeTruthy();
+    });
+  });
+
+  it('status generating: shows Generating indicator, no failed banner', async () => {
+    const generatingPod = {
+      id: 'pod_demo_01',
+      status: 'generating',
+      targetCount: 7,
+      capturedCount: 7,
+      recentSnaps: [],
+      episode: null,
+    };
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(generatingPod)));
+
+    const { queryByLabelText, getByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
+
+    await waitFor(() => {
+      expect(queryByLabelText('Loading Food Pod')).toBeNull();
+    });
+
+    // Generating indicator must be visible
+    await waitFor(() => {
+      expect(getByLabelText('Generating your FoodPod')).toBeTruthy();
+    });
+
+    // No failed banner
+    expect(queryByLabelText('Retry generating your FoodPod')).toBeNull();
   });
 });
