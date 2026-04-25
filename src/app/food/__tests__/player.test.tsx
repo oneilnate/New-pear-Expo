@@ -200,6 +200,21 @@ describe('FoodPlayerScreen — other error path', () => {
   });
 });
 
+describe('FoodPlayerScreen — audio load error banner', () => {
+  it('shows audio error banner when useAudioPlayer has a loadError', async () => {
+    // Make createAsync reject so loadError state is set
+    const { Audio: MockAudio } = await import('expo-av');
+    (MockAudio.Sound.createAsync as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error('Network request failed'),
+    );
+
+    const { findByLabelText } = renderScreen();
+    // Wait for the episode to load first (MSW resolves normally)
+    const banner = await findByLabelText('Audio load error', {}, { timeout: 3000 });
+    expect(banner).toBeTruthy();
+  });
+});
+
 describe('FoodPlayerScreen — success state', () => {
   it('renders episode title', async () => {
     const { getAllByText } = renderScreen();

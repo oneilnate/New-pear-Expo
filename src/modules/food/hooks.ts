@@ -203,6 +203,8 @@ export type AudioPlayerState = {
   positionMillis: number;
   /** Total duration in milliseconds (0 until loaded) */
   durationMillis: number;
+  /** Non-null when audio failed to load; null when no error */
+  loadError: string | null;
   /** Resume / start playback */
   play: () => Promise<void>;
   /** Pause playback */
@@ -226,11 +228,13 @@ export function useAudioPlayer(audioUrl: string | undefined): AudioPlayerState {
   const [isPlaying, setIsPlaying] = useState(false);
   const [positionMillis, setPositionMillis] = useState(0);
   const [durationMillis, setDurationMillis] = useState(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Load sound when audioUrl becomes available
   useEffect(() => {
     if (!audioUrl) return;
     const url: string = audioUrl;
+    setLoadError(null);
 
     let cancelled = false;
     let sound: Audio.Sound | null = null;
@@ -270,8 +274,11 @@ export function useAudioPlayer(audioUrl: string | undefined): AudioPlayerState {
             setDurationMillis(status.durationMillis);
           }
         }
-      } catch {
-        // Load failure is non-fatal — UI shows error state
+      } catch (err) {
+        // Surface load error so UI can display a banner instead of silently failing
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : 'Failed to load audio');
+        }
       }
     }
 
@@ -286,6 +293,7 @@ export function useAudioPlayer(audioUrl: string | undefined): AudioPlayerState {
       setIsLoaded(false);
       setIsPlaying(false);
       setPositionMillis(0);
+      setLoadError(null);
     };
   }, [audioUrl]);
 
@@ -315,5 +323,5 @@ export function useAudioPlayer(audioUrl: string | undefined): AudioPlayerState {
     await soundRef.current.setPositionAsync(ms);
   }, []);
 
-  return { isLoaded, isPlaying, positionMillis, durationMillis, play, pause, seek };
+  return { isLoaded, isPlaying, positionMillis, durationMillis, loadError, play, pause, seek };
 }
