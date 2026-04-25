@@ -250,6 +250,7 @@ export function CaptureScreen() {
         ref={cameraRef}
         style={styles.camera}
         facing="back"
+        zoom={0.15}
         active={state.cameraActive}
         accessibilityLabel="Camera viewfinder"
       />
