@@ -1,13 +1,13 @@
 /**
  * FoodSnapCard — CTA card for capturing a new meal snap.
  *
- * Prominent card/button that navigates to /food/capture.
- * Green background, camera icon, label text.
- * Satisfies WCAG AA: white text on #15803D = 4.86:1.
+ * Light-gray pill, dark text, bright-green camera circle on the right.
+ * Matches Simon's mock: #CBD5E1 background, #22C55E icon circle.
  *
  * Architecture: display-only, navigation triggered by onPress callback.
  */
 
+import { Ionicons } from '@expo/vector-icons';
 // biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -21,18 +21,17 @@ export function FoodSnapCard({ onPress }: FoodSnapCardProps) {
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={onPress}
-      accessibilityLabel="Snap a meal"
+      accessibilityLabel="Snap food & beverages"
       accessibilityRole="button"
       accessibilityHint="Navigate to meal capture screen"
     >
-      <View style={styles.iconContainer}>
-        <Text style={styles.icon}>📷</Text>
-      </View>
       <View style={styles.textContainer}>
-        <Text style={styles.label}>Snap a meal</Text>
-        <Text style={styles.sublabel}>Capture your next meal to progress</Text>
+        <Text style={styles.label}>Snap food & beverages</Text>
+        <Text style={styles.sublabel}>Capture your next food-item to progress</Text>
       </View>
-      <Text style={styles.arrow}>›</Text>
+      <View style={styles.iconCircle}>
+        <Ionicons name="camera-outline" size={28} color="#0F172A" />
+      </View>
     </Pressable>
   );
 }
@@ -41,7 +40,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#15803D',
+    backgroundColor: '#CBD5E1',
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 20,
@@ -50,33 +49,25 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.85,
   },
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  icon: {
-    fontSize: 22,
-  },
   textContainer: {
     flex: 1,
   },
   label: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#0F172A',
   },
   sublabel: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    color: '#334155',
     marginTop: 2,
   },
-  arrow: {
-    fontSize: 24,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '300',
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#22C55E',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

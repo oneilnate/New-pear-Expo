@@ -31,6 +31,7 @@ for (const ext of ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg']) {
 }
 
 vi.mock('expo-av');
+vi.mock('@expo/vector-icons');
 vi.mock('expo-router', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
   useLocalSearchParams: () => ({}),
