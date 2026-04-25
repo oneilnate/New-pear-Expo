@@ -58,7 +58,7 @@ F3-E4 implemented. Full player screen at /food/player + audio playback.
 
 See `index.ts` for the full export list. Key exports:
 - Types: `Pod`, `Meal`, `Podcast`, `PodStatus`, `MealStatus`, `CreateMealResponse`
-- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `useUploadMeal`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`, `useCurrentPod`, `useTuneIn`, `useEpisode`, `useAudioPlayer`
+- Hooks: `useCreatePod`, `useCreateMeal`, `useUploadMealImage`, `useUploadMeal`, `usePatchMeal`, `useCompletePod`, `usePodStatus`, `usePodcast`, `usePodState`, `useCurrentPod`, `useTuneIn`, `useEpisode`, `useAudioPlayer` (returns `loadError: string | null`)
 - Components: `PodGrid`, `PodCounter`, `FoodSnapCard`, `TuneInModal`, `PlayerControls`, `StartNewPodButton`
 - Types: `Episode`, `AudioPlayerState`
 
@@ -71,6 +71,13 @@ pnpm lint
 ```
 
 All three must exit 0 before committing changes to this module.
+
+F8 (exe_n8VFR9XQ) implemented. Audio error surfacing + player layout fix.
+- useAudioPlayer: `loadError: string | null` added to AudioPlayerState; catch block sets it
+  instead of silently swallowing errors; reset to null on URL change and unmount cleanup.
+- player.tsx: `loadError` banner (yellow) shown in white bottom sheet when audio fails to load.
+- player.tsx: sheet layout changed from `maxHeight: '55%'` to `height: '50%'` so PlayerControls
+  are always visible regardless of scroll content height.
 
 F7 (exe_VKuAAzpN) implemented. Dynamic current pod + 7-dot grid + StartNewPodButton.
 - getCurrentPod() added to food.service.ts (GET /api/pods/current)

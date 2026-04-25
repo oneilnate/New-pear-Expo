@@ -168,4 +168,37 @@ describe('useAudioPlayer', () => {
     expect(result.current.positionMillis).toBe(0);
     expect(result.current.durationMillis).toBe(0);
   });
+
+  it('returns loadError=null initially', () => {
+    const { result } = renderPlayer(TEST_URL);
+    expect(result.current.loadError).toBeNull();
+  });
+
+  it('sets loadError when createAsync rejects', async () => {
+    (Audio.Sound.createAsync as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error('Network request failed'),
+    );
+
+    const { result } = renderPlayer(TEST_URL);
+
+    await act(async () => {
+      await Promise.resolve();
+      // Allow the rejected promise to propagate
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    expect(result.current.loadError).toBe('Network request failed');
+    expect(result.current.isLoaded).toBe(false);
+  });
+
+  it('resets loadError to null on unmount cleanup', async () => {
+    const { result, unmount } = renderPlayer(TEST_URL);
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    unmount();
+    expect(result.current.loadError).toBeNull();
+  });
 });

@@ -47,9 +47,8 @@ export default function FoodPlayerScreen() {
 
   const { data: episode, isLoading, isError, error, refetch } = useEpisode(podId);
 
-  const { isLoaded, isPlaying, positionMillis, durationMillis, play, pause, seek } = useAudioPlayer(
-    episode?.audioUrl,
-  );
+  const { isLoaded, isPlaying, positionMillis, durationMillis, loadError, play, pause, seek } =
+    useAudioPlayer(episode?.audioUrl);
 
   const is404 = isError && (error?.message ?? '').startsWith('HTTP 404');
 
@@ -164,6 +163,13 @@ export default function FoodPlayerScreen() {
       <View style={styles.sheet}>
         {/* Drag handle */}
         <View style={styles.dragHandle} />
+
+        {/* Audio load error banner — shown when expo-av fails to load the URL */}
+        {loadError ? (
+          <View style={styles.loadErrorBanner} accessibilityLabel="Audio load error">
+            <Text style={styles.loadErrorText}>⚠️ {loadError}</Text>
+          </View>
+        ) : null}
 
         <ScrollView
           style={styles.sheetScroll}
@@ -306,12 +312,27 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // Bottom sheet
+  // Bottom sheet — fixed height so PlayerControls are always visible
   sheet: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '55%',
+    height: '50%',
+  },
+  loadErrorBanner: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: '#FEF9C3',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FDE047',
+  },
+  loadErrorText: {
+    fontSize: 13,
+    color: '#713F12',
+    lineHeight: 18,
   },
   dragHandle: {
     width: 36,
