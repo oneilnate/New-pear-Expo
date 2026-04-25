@@ -26,6 +26,11 @@ Owns:
 F3-E1 implemented. usePodState hook + PodGrid/PodCounter/FoodSnapCard components
 added. Home screen (/food) pixel-matches IMG_5116/IMG_5117.
 
+FoodSnapCard restyled (Simon's mock): light-gray pill #CBD5E1 background, dark
+text #0F172A title / #334155 sublabel, bright-green #22C55E camera circle (52px)
+on the right using Ionicons camera-outline. Copy updated to 'Snap food &
+beverages' / 'Capture your next food-item to progress'. Removed chevron arrow.
+
 F3-E2 implemented. useUploadMeal hook added. Calls uploadMeal() service (POST
 /api/pods/:podId/images multipart) and invalidates podState query on success so
 home grid auto-refreshes.
