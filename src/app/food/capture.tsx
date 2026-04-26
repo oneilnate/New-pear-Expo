@@ -155,7 +155,7 @@ export function CaptureScreen() {
       <SafeAreaView style={styles.centered}>
         <ActivityIndicator
           size="large"
-          color="#15803D"
+          color="#22C55E"
           accessibilityLabel="Checking camera permission"
         />
       </SafeAreaView>
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   primaryButton: {
-    backgroundColor: '#15803D',
+    backgroundColor: '#22C55E',
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 24,

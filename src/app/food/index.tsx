@@ -97,7 +97,7 @@ export default function FoodHomeScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#15803D" accessibilityLabel="Loading Food Pod" />
+        <ActivityIndicator size="large" color="#22C55E" accessibilityLabel="Loading Food Pod" />
       </SafeAreaView>
     );
   }
@@ -182,7 +182,7 @@ export default function FoodHomeScreen() {
           {/* Generating indicator — shown while backend pipeline is running */}
           {isGridUnlocked && status === 'generating' && (
             <View style={styles.generatingRow} accessibilityLabel="Generating your FoodPod">
-              <ActivityIndicator size="small" color="#15803D" />
+              <ActivityIndicator size="small" color="#22C55E" />
               <Text style={styles.generatingText}>Generating your FoodPod…</Text>
             </View>
           )}
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   },
   unlockedBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#15803D',
+    backgroundColor: '#22C55E',
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   tuneInCta: {
-    backgroundColor: '#15803D',
+    backgroundColor: '#22C55E',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 20,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   retryButton: {
-    backgroundColor: '#15803D',
+    backgroundColor: '#22C55E',
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   generatingText: {
     fontSize: 13,
-    color: '#15803D',
+    color: '#22C55E',
     fontWeight: '600',
   },
   generationFailedText: {
