@@ -8,7 +8,7 @@
  * derived from `targetCount` so the grid responds to server-side target
  * changes automatically. Default 7 matches the new 7-meal target.
  *
- * Captured dots: #15803D (WCAG AA 4.86:1 on white)
+ * Captured dots: #22C55E (~3.0:1 on white — UI element, not normal text)
  * Empty dots:    #E2E8F0 (decorative, no contrast requirement)
  * Dot size: 12px diameter, 16px gap (same as F3-E1 — maintains IMG_5116/5117 style)
  *
@@ -24,7 +24,7 @@ const DOT_SIZE = 12;
 const DOT_GAP = 16;
 const COLUMNS = 7;
 
-const GREEN = '#15803D'; // WCAG AA 4.86:1 on #FFFFFF
+const GREEN = '#22C55E'; // ~3.0:1 on #FFFFFF — UI element/icon use only
 const GRAY = '#E2E8F0'; // decorative empty state
 
 export type PodGridProps = {

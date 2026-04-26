@@ -3,7 +3,7 @@
  *
  * Renders:
  *   - Back-15s / Forward-15s skip buttons flanking the play/pause button
- *   - Large circular play/pause button (72px, #15803D)
+ *   - Large circular play/pause button (72px, #22C55E)
  *   - Scrubable progress bar (touch target ≥ 44pt)
  *   - Elapsed / remaining time labels in MM:SS format
  *
@@ -130,7 +130,7 @@ export function PlayerControls({
 
 const PLAY_BUTTON_SIZE = 72;
 const SKIP_BUTTON_SIZE = 48;
-const GREEN = '#15803D';
+const GREEN = '#22C55E';
 
 const styles = StyleSheet.create({
   container: {
