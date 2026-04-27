@@ -178,9 +178,19 @@ describe('FoodHomeScreen', () => {
   });
 
   it('shows UNLOCKED state when capturedCount >= targetCount', async () => {
+    // Pre-seed dismissal so the TuneInModal does not auto-open and block
+    // accessibility queries to the underlying screen (modal captures a11y focus).
+    secureStore.tune_in_dismissed_pod_demo_01 = 'true';
+
     server.use(
       http.get(`${BASE_URL}/api/pods/current`, () =>
-        HttpResponse.json({ ...mockPodState, capturedCount: 30, targetCount: 30, status: 'ready' }),
+        HttpResponse.json({
+          ...mockPodState,
+          capturedCount: 30,
+          targetCount: 30,
+          status: 'ready',
+          episode: { audioUrl: 'https://example.com/ep.mp3', title: 'Week 1' },
+        }),
       ),
     );
 
@@ -190,7 +200,9 @@ describe('FoodHomeScreen', () => {
       expect(queryByLabelText('Loading Food Pod')).toBeNull();
     });
 
-    expect(getByLabelText('Food Pod unlocked')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByLabelText('Food Pod unlocked')).toBeTruthy();
+    });
   });
 
   it('shows Tune In modal when status=ready and episode is non-null', async () => {
@@ -354,18 +366,86 @@ describe('FoodHomeScreen', () => {
     };
     server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(generatingPod)));
 
+    const { queryByLabelText, queryByText, getByLabelText } = renderWithQueryClient(
+      <FoodHomeScreen />,
+    );
+
+    await waitFor(() => {
+      expect(queryByLabelText('Loading Food Pod')).toBeNull();
+    });
+
+    // Generating indicator must be visible with updated copy
+    await waitFor(() => {
+      expect(getByLabelText('Your FoodPod is being created')).toBeTruthy();
+    });
+
+    // No failed banner
+    expect(queryByLabelText('Retry generating your FoodPod')).toBeNull();
+    // No UNLOCKED banner — status is 'generating', not 'ready'
+    expect(queryByText('Your FoodPod is Ready!')).toBeNull();
+    // No Tune In CTA
+    expect(queryByLabelText('Open Tune In for your FoodPod')).toBeNull();
+  });
+
+  it('status generating (isGridUnlocked): spinner visible, no UNLOCKED banner, no Tune In CTA', async () => {
+    const generatingPod = {
+      id: 'pod_demo_01',
+      status: 'generating',
+      targetCount: 7,
+      capturedCount: 7,
+      recentSnaps: [],
+      episode: null,
+    };
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(generatingPod)));
+
+    const { queryByLabelText, queryByText, getByLabelText } = renderWithQueryClient(
+      <FoodHomeScreen />,
+    );
+
+    await waitFor(() => {
+      expect(queryByLabelText('Loading Food Pod')).toBeNull();
+    });
+
+    // Spinner with correct copy must be visible
+    await waitFor(() => {
+      expect(getByLabelText('Your FoodPod is being created')).toBeTruthy();
+    });
+
+    // UNLOCKED banner must NOT be visible before status==='ready'
+    expect(queryByText('Your FoodPod is Ready!')).toBeNull();
+    expect(queryByLabelText('Food Pod unlocked')).toBeNull();
+    // Tune In CTA must NOT be present
+    expect(queryByLabelText('Open Tune In for your FoodPod')).toBeNull();
+  });
+
+  it('status collecting (transient after snap-7, before /complete success): spinner visible', async () => {
+    // Simulates the gap between the 7th snap and /complete returning:
+    // capturedCount === targetCount but status is still 'collecting'
+    const collectingFull = {
+      id: 'pod_demo_01',
+      status: 'collecting',
+      targetCount: 7,
+      capturedCount: 7,
+      recentSnaps: [],
+      episode: null,
+    };
+    server.use(
+      http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(collectingFull)),
+      // /complete returns generating — simulates normal path
+      http.post(`${BASE_URL}/api/pods/:podId/complete`, () =>
+        HttpResponse.json({ id: 'pod_demo_01', status: 'generating' }),
+      ),
+    );
+
     const { queryByLabelText, getByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
 
     await waitFor(() => {
       expect(queryByLabelText('Loading Food Pod')).toBeNull();
     });
 
-    // Generating indicator must be visible
+    // Spinner must be visible: isGridUnlocked=true, status='collecting' (not 'ready', not 'failed')
     await waitFor(() => {
-      expect(getByLabelText('Generating your FoodPod')).toBeTruthy();
+      expect(getByLabelText('Your FoodPod is being created')).toBeTruthy();
     });
-
-    // No failed banner
-    expect(queryByLabelText('Retry generating your FoodPod')).toBeNull();
   });
 });
