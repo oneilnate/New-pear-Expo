@@ -125,9 +125,10 @@ export default function FoodHomeScreen() {
   const { capturedCount, targetCount, status } = podState;
   // Grid UNLOCKED: capturedCount >= targetCount (visual state on home screen)
   const isGridUnlocked = capturedCount >= targetCount;
-  // Suppress the Unlocked banner + Tune-In CTA when the pod failed — only the
-  // inline "Generation failed — Retry" Pressable should be visible below the divider.
-  const showUnlockedBanner = isGridUnlocked && status !== 'failed';
+  // Gate UNLOCKED banner on backend confirmation: status must be 'ready' AND
+  // an episode must be loaded. This prevents showing UNLOCKED prematurely
+  // while the backend pipeline is still running (generating/collecting).
+  const showUnlockedBanner = status === 'ready' && podState.episode != null;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -135,7 +136,7 @@ export default function FoodHomeScreen() {
       {/* Guard: do not auto-open modal when pod failed (useTuneIn also requires
           status==='ready', but explicit here for clarity). */}
       <TuneInModal
-        visible={showModal && status !== 'failed'}
+        visible={showModal && status === 'ready'}
         onTuneIn={handleTuneIn}
         onNotNow={handleNotNow}
       />
@@ -179,11 +180,13 @@ export default function FoodHomeScreen() {
 
           <View style={styles.divider} />
 
-          {/* Generating indicator — shown while backend pipeline is running */}
-          {isGridUnlocked && status === 'generating' && (
-            <View style={styles.generatingRow} accessibilityLabel="Generating your FoodPod">
+          {/* Generating indicator — shown while backend pipeline is running.
+              Covers all transient post-snap states: 'collecting' (after auto-fire,
+              before /complete returns), 'generating', 'pending_complete', etc. */}
+          {isGridUnlocked && status !== 'ready' && status !== 'failed' && (
+            <View style={styles.generatingRow} accessibilityLabel="Your FoodPod is being created">
               <ActivityIndicator size="small" color="#22C55E" />
-              <Text style={styles.generatingText}>Generating your FoodPod…</Text>
+              <Text style={styles.generatingText}>Your FoodPod is being created…</Text>
             </View>
           )}
 
@@ -207,8 +210,9 @@ export default function FoodHomeScreen() {
             </Pressable>
           )}
 
-          {/* Unlocked banner (30/30 state) — hidden when pod.status === 'failed' */}
-          {showUnlockedBanner ? (
+          {/* Unlocked banner — only when backend confirms status='ready' AND
+              episode is loaded. Mutually exclusive with spinner and failed states. */}
+          {showUnlockedBanner && (
             <View
               style={styles.unlockedBanner}
               accessibilityLabel="Food Pod unlocked"
@@ -245,9 +249,10 @@ export default function FoodHomeScreen() {
                 <Text style={styles.tuneInCtaText}>Tune In</Text>
               </Pressable>
             </View>
-          ) : !isGridUnlocked ? (
-            <Text style={styles.recentSnapsLabel}>RECENT SNAPS</Text>
-          ) : null}
+          )}
+
+          {/* RECENT SNAPS label — only shown when grid is not yet full */}
+          {!isGridUnlocked && <Text style={styles.recentSnapsLabel}>RECENT SNAPS</Text>}
         </View>
 
         {/* Food Snap CTA */}
