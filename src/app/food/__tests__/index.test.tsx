@@ -6,14 +6,14 @@
  * - Success state: PodGrid and counter text appear with data from mocked API
  * - Error state: error message and retry button rendered on failure
  * - UNLOCKED state: shown when capturedCount >= targetCount
- * - Tune In modal: auto-shown when status='ready' && episode != null
- * - Not Now: dismisses modal (flag persisted via expo-secure-store mock)
- * - Modal does not re-show after Not Now dismissal
+ * - Auto-navigation: router.push('/food/player') called ONCE when status='ready' && episode != null
+ * - Tune In CTA: navigates to /food/player when pressed
+ * - Auto-nav fires only once per pod id (ref guard prevents re-navigation on return)
  *
  * Mocks: MSW intercepts GET /api/pods/current, expo-router mocked
  *
  * F3-E1: loading / success / error / unlocked states
- * F3-E3: Tune In modal auto-show, Not Now dismiss, re-open via banner
+ * F3-E3: direct player auto-navigation, Tune In CTA re-entry
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -38,11 +38,15 @@ vi.mock('expo-secure-store', () => ({
   },
 }));
 
+// ── Capture router.push spy so tests can assert on navigation calls ──────────
+// vi.hoisted ensures the variable is available inside the hoisted vi.mock factory.
+const mockPush = vi.hoisted(() => vi.fn());
+
 // Mock expo-router before importing the screen
 // NOTE: vi.mock is hoisted; no JSX or React in the factory
 vi.mock('expo-router', () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: mockPush,
     replace: vi.fn(),
     back: vi.fn(),
   }),
@@ -93,6 +97,8 @@ afterEach(() => {
   for (const key of Object.keys(secureStore)) {
     delete (secureStore as Record<string, string>)[key];
   }
+  // Reset navigation spy between tests
+  mockPush.mockClear();
 });
 afterAll(() => server.close());
 
@@ -178,10 +184,6 @@ describe('FoodHomeScreen', () => {
   });
 
   it('shows UNLOCKED state when capturedCount >= targetCount', async () => {
-    // Pre-seed dismissal so the TuneInModal does not auto-open and block
-    // accessibility queries to the underlying screen (modal captures a11y focus).
-    secureStore.tune_in_dismissed_pod_demo_01 = 'true';
-
     server.use(
       http.get(`${BASE_URL}/api/pods/current`, () =>
         HttpResponse.json({
@@ -205,72 +207,25 @@ describe('FoodHomeScreen', () => {
     });
   });
 
-  it('shows Tune In modal when status=ready and episode is non-null', async () => {
+  it('auto-navigates to /food/player when status=ready and episode is non-null', async () => {
     server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
 
-    const { queryByLabelText, getByText } = renderWithQueryClient(<FoodHomeScreen />);
+    const { queryByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
 
     await waitFor(() => {
       expect(queryByLabelText('Loading Food Pod')).toBeNull();
     });
 
-    // TuneInModal should be visible
+    // Auto-navigation to player should fire once pod is ready with an episode
     await waitFor(() => {
-      expect(getByText('Your FoodPod')).toBeTruthy();
+      expect(mockPush).toHaveBeenCalledWith('/food/player');
     });
-    expect(getByText('Tune In')).toBeTruthy();
-    expect(getByText('Not Now')).toBeTruthy();
+
+    // Navigation fires exactly once (ref guard prevents re-navigation)
+    expect(mockPush).toHaveBeenCalledTimes(1);
   });
 
-  it('dismisses modal and persists flag when "Not Now" is pressed', async () => {
-    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
-
-    const { queryByLabelText, getByLabelText, queryByText } = renderWithQueryClient(
-      <FoodHomeScreen />,
-    );
-
-    await waitFor(() => {
-      expect(queryByLabelText('Loading Food Pod')).toBeNull();
-    });
-
-    // Wait for modal to appear
-    await waitFor(() => {
-      expect(getByLabelText('Not Now — dismiss Tune In modal')).toBeTruthy();
-    });
-
-    // Press Not Now
-    await act(async () => {
-      fireEvent.press(getByLabelText('Not Now — dismiss Tune In modal'));
-    });
-
-    // Modal should be dismissed
-    await waitFor(() => {
-      expect(queryByText('Not Now')).toBeNull();
-    });
-
-    // SecureStore flag should be set
-    expect(secureStore.tune_in_dismissed_pod_demo_01).toBe('true');
-  });
-
-  it('does not auto-show modal again if dismissed flag is already set', async () => {
-    // Pre-seed the dismissal flag
-    secureStore.tune_in_dismissed_pod_demo_01 = 'true';
-
-    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
-
-    const { queryByLabelText, queryByText } = renderWithQueryClient(<FoodHomeScreen />);
-
-    await waitFor(() => {
-      expect(queryByLabelText('Loading Food Pod')).toBeNull();
-    });
-
-    // Give it time to load storage and settle
-    await waitFor(() => {
-      expect(queryByText('Not Now')).toBeNull();
-    });
-  });
-
-  it('Tune In button is accessible and can be pressed when modal is shown', async () => {
+  it('Tune In CTA navigates to /food/player when pressed', async () => {
     server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
 
     const { queryByLabelText, getByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
@@ -279,20 +234,71 @@ describe('FoodHomeScreen', () => {
       expect(queryByLabelText('Loading Food Pod')).toBeNull();
     });
 
-    // TuneInModal visible — Tune In button accessible
+    // Wait for unlocked state to appear
+    await waitFor(() => {
+      expect(getByLabelText('Food Pod unlocked')).toBeTruthy();
+    });
+
+    // Reset call count so we can isolate the CTA press (auto-nav may have already fired)
+    mockPush.mockClear();
+
+    // Press the explicit Tune In CTA
+    await act(async () => {
+      fireEvent.press(getByLabelText('Open Tune In for your FoodPod'));
+    });
+
+    // Should navigate to player
+    expect(mockPush).toHaveBeenCalledWith('/food/player');
+  });
+
+  it('auto-nav fires only once per pod id (ref guard prevents re-navigation)', async () => {
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
+
+    const { queryByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
+
+    await waitFor(() => {
+      expect(queryByLabelText('Loading Food Pod')).toBeNull();
+    });
+
+    // Wait for auto-navigation to fire
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/food/player');
+    });
+
+    const callsBefore = mockPush.mock.calls.length;
+
+    // Give more time to confirm no additional auto-nav fires
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 100));
+    });
+
+    // Should still be the same count — navigatedPods ref prevents re-firing
+    expect(mockPush.mock.calls.length).toBe(callsBefore);
+  });
+
+  it('arrow button navigates to /food/player when pressed', async () => {
+    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
+
+    const { queryByLabelText, getByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
+
+    await waitFor(() => {
+      expect(queryByLabelText('Loading Food Pod')).toBeNull();
+    });
+
+    // Unlocked banner arrow button is accessible
     await waitFor(() => {
       expect(getByLabelText('Tune In to your FoodPod')).toBeTruthy();
     });
 
-    // Pressing Tune In should not throw; navigation is handled by mocked router
+    // Reset so we isolate this press
+    mockPush.mockClear();
+
+    // Pressing the arrow button navigates to player; no modal involved
     await act(async () => {
       fireEvent.press(getByLabelText('Tune In to your FoodPod'));
     });
 
-    // Modal should close after pressing Tune In
-    await waitFor(() => {
-      expect(queryByLabelText('Not Now — dismiss Tune In modal')).toBeNull();
-    });
+    expect(mockPush).toHaveBeenCalledWith('/food/player');
   });
 
   // ── Polling-trust tests (F10) ────────────────────────────────────────────

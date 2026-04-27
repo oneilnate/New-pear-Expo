@@ -2,17 +2,19 @@
  * Food Pod home screen — /food
  *
  * Pixel-matches IMG_5116 (29/30) and IMG_5117 (30/30 UNLOCKED).
- * Shows TuneInModal (IMG_5118) when pod.status === 'ready' && episode != null.
+ * When pod.status === 'ready' && episode != null, auto-navigates directly to
+ * /food/player (skipping the TuneInModal interstitial). Uses useRef<Set<string>>
+ * to navigate ONCE per pod id so users can return to home without being flung
+ * back to the player.
  * Fetches pod state from backend via usePodState (React Query).
  *
  * Architecture contract:
  * - JSX + local state only — no business logic, no fetch() calls.
  * - All server state via usePodState from @/modules/food.
  * - All navigation via expo-router useRouter.
- * - TuneIn state via useTuneIn hook.
  *
  * F3-E1 — Mobile home screen (30-dot grid + counter + Food Snap card)
- * F3-E3 — UNLOCKED state + Tune In modal
+ * F3-E3 — UNLOCKED state + direct player navigation
  */
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -35,10 +37,8 @@ import {
   foodQueryKeys,
   PodGrid,
   StartNewPodButton,
-  TuneInModal,
   useCompletePod,
   useCurrentPod,
-  useTuneIn,
 } from '@/modules/food';
 
 export default function FoodHomeScreen() {
@@ -46,7 +46,7 @@ export default function FoodHomeScreen() {
   // F7 (exe_VKuAAzpN): podId driven by GET /api/pods/current via useCurrentPod()
   const { data: podState, isLoading, isError, error, refetch } = useCurrentPod();
   const podId = podState?.id;
-  const { showModal, openModal, dismissModal } = useTuneIn(podId ?? '', podState);
+  const navigatedPods = useRef<Set<string>>(new Set());
 
   // ── Auto-trigger /complete when capturedCount === targetCount && status === 'collecting' ──
   const queryClient = useQueryClient();
@@ -80,17 +80,21 @@ export default function FoodHomeScreen() {
     queryClient,
   ]);
 
+  // Auto-navigate to /food/player once per pod when ready
+  useEffect(() => {
+    if (!podId) return;
+    if (
+      podState?.status === 'ready' &&
+      podState?.episode != null &&
+      !navigatedPods.current.has(podId)
+    ) {
+      navigatedPods.current.add(podId);
+      router.push('/food/player');
+    }
+  }, [podState?.status, podState?.episode, podId, router.push]);
+
   function handleSnapPress() {
     router.push('/food/capture');
-  }
-
-  function handleTuneIn() {
-    void dismissModal();
-    router.push('/food/player');
-  }
-
-  function handleNotNow() {
-    void dismissModal();
   }
 
   // ── Loading state ─────────────────────────────────────────────────────────
@@ -132,15 +136,6 @@ export default function FoodHomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Tune In modal — auto-shown on first unlock, re-openable via button */}
-      {/* Guard: do not auto-open modal when pod failed (useTuneIn also requires
-          status==='ready', but explicit here for clarity). */}
-      <TuneInModal
-        visible={showModal && status === 'ready'}
-        onTuneIn={handleTuneIn}
-        onNotNow={handleNotNow}
-      />
-
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -228,10 +223,10 @@ export default function FoodHomeScreen() {
                     View your personalized nutrition insights
                   </Text>
                 </View>
-                {/* Re-open Tune In modal */}
+                {/* Navigate to player */}
                 <Pressable
                   style={styles.unlockedArrowBtn}
-                  onPress={openModal}
+                  onPress={() => router.push('/food/player')}
                   accessibilityLabel="Tune In to your FoodPod"
                   accessibilityRole="button"
                 >
@@ -239,10 +234,10 @@ export default function FoodHomeScreen() {
                 </Pressable>
               </View>
 
-              {/* Explicit Tune In CTA below the row */}
+              {/* Tune In CTA — navigates directly to player */}
               <Pressable
                 style={styles.tuneInCta}
-                onPress={openModal}
+                onPress={() => router.push('/food/player')}
                 accessibilityLabel="Open Tune In for your FoodPod"
                 accessibilityRole="button"
               >

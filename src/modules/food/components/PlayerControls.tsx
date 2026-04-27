@@ -13,6 +13,7 @@
  * Architecture: pure presentational component — no hooks, no fetch.
  */
 
+import { Ionicons } from '@expo/vector-icons';
 // biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -107,7 +108,12 @@ export function PlayerControls({
           accessibilityLabel={isPlaying ? 'Pause' : 'Play'}
           accessibilityRole="button"
         >
-          <Text style={styles.playIcon}>{isPlaying ? '⏸' : '▶'}</Text>
+          <Ionicons
+            name={isPlaying ? 'pause' : 'play'}
+            size={36}
+            color="#FFFFFF"
+            style={isPlaying ? undefined : { marginLeft: 4 }}
+          />
         </Pressable>
 
         {/* Forward 15s */}
@@ -202,9 +208,5 @@ const styles = StyleSheet.create({
     backgroundColor: GREEN,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  playIcon: {
-    color: '#FFFFFF',
-    fontSize: 28,
   },
 });
