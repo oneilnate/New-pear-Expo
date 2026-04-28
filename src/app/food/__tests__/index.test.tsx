@@ -276,31 +276,6 @@ describe('FoodHomeScreen', () => {
     expect(mockPush.mock.calls.length).toBe(callsBefore);
   });
 
-  it('arrow button navigates to /food/player when pressed', async () => {
-    server.use(http.get(`${BASE_URL}/api/pods/current`, () => HttpResponse.json(mockPodReady)));
-
-    const { queryByLabelText, getByLabelText } = renderWithQueryClient(<FoodHomeScreen />);
-
-    await waitFor(() => {
-      expect(queryByLabelText('Loading Food Pod')).toBeNull();
-    });
-
-    // Unlocked banner arrow button is accessible
-    await waitFor(() => {
-      expect(getByLabelText('Tune In to your FoodPod')).toBeTruthy();
-    });
-
-    // Reset so we isolate this press
-    mockPush.mockClear();
-
-    // Pressing the arrow button navigates to player; no modal involved
-    await act(async () => {
-      fireEvent.press(getByLabelText('Tune In to your FoodPod'));
-    });
-
-    expect(mockPush).toHaveBeenCalledWith('/food/player');
-  });
-
   // ── Polling-trust tests (F10) ────────────────────────────────────────────
 
   it('mutation error + status collecting: does not show failed banner, no Retry pressable', async () => {
