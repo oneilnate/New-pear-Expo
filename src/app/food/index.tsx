@@ -216,22 +216,11 @@ export default function FoodHomeScreen() {
               <View style={styles.unlockedBadge}>
                 <Text style={styles.unlockedBadgeText}>UNLOCKED</Text>
               </View>
-              <View style={styles.unlockedTextRow}>
-                <View style={styles.unlockedTextBlock}>
-                  <Text style={styles.unlockedTitle}>Your FoodPod is Ready!</Text>
-                  <Text style={styles.unlockedSubtitle}>
-                    View your personalized nutrition insights
-                  </Text>
-                </View>
-                {/* Navigate to player */}
-                <Pressable
-                  style={styles.unlockedArrowBtn}
-                  onPress={() => router.push('/food/player')}
-                  accessibilityLabel="Tune In to your FoodPod"
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.unlockedArrow}>›</Text>
-                </Pressable>
+              <View style={styles.unlockedTextBlock}>
+                <Text style={styles.unlockedTitle}>Your FoodPod is Ready!</Text>
+                <Text style={styles.unlockedSubtitle}>
+                  View your personalized nutrition insights
+                </Text>
               </View>
 
               {/* Tune In CTA — navigates directly to player */}
@@ -357,11 +346,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
-  unlockedTextRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   unlockedTextBlock: {
     flex: 1,
     gap: 4,
@@ -374,19 +358,6 @@ const styles = StyleSheet.create({
   unlockedSubtitle: {
     fontSize: 14,
     color: '#475569',
-  },
-  unlockedArrowBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1A1A1A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  unlockedArrow: {
-    fontSize: 22,
-    color: '#FFFFFF',
-    fontWeight: '400',
   },
   tuneInCta: {
     backgroundColor: '#22C55E',
