@@ -238,8 +238,6 @@ export default function FoodHomeScreen() {
             </View>
           )}
 
-          {/* RECENT SNAPS label — only shown when grid is not yet full */}
-          {!isGridUnlocked && <Text style={styles.recentSnapsLabel}>RECENT SNAPS</Text>}
         </View>
 
         {/* Food Snap CTA */}
@@ -320,17 +318,12 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   gridWrapper: {
-    alignSelf: 'flex-start',
+    alignItems: 'center',
+    width: '100%',
   },
   divider: {
     height: 1,
     backgroundColor: '#E2E8F0',
-  },
-  recentSnapsLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 0.8,
   },
   // Unlocked banner
   unlockedBanner: {
