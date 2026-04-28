@@ -14,6 +14,7 @@
 // biome-ignore lint/correctness/noUnusedImports: vitest-native requires React in scope for JSX transform
 import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
+import type { SnapThumb } from '@/services/food.service';
 
 const SLOT_SIZE = 64;
 const SLOT_RADIUS = 12;
@@ -21,7 +22,8 @@ const SLOT_GAP = 10;
 const COLUMNS = 4;
 const EMPTY_BG = '#E2E8F0';
 
-export type SnapThumb = { id: string; thumb: string; rating: string | null };
+// Re-export so callers can use MealThumbnailGrid's type without reaching into services
+export type { SnapThumb };
 
 export type MealThumbnailGridProps = {
   recentSnaps: SnapThumb[];

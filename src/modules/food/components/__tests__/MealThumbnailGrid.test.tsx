@@ -16,16 +16,14 @@ import { MealThumbnailGrid } from '../MealThumbnailGrid';
 
 describe('MealThumbnailGrid', () => {
   it('renders 8 empty slots when targetCount=8 and recentSnaps=[]', () => {
-    const { getAllByRole, queryAllByRole } = render(
+    const { queryAllByRole, queryAllByLabelText } = render(
       <MealThumbnailGrid recentSnaps={[]} targetCount={8} />,
     );
-    // 8 empty slots — no images rendered
+    // No images rendered — all slots are empty
     const images = queryAllByRole('image');
     expect(images).toHaveLength(0);
-    // All 8 slot Views exist (checked indirectly via host element count)
-    // Use getAllByRole with accessible=false workaround: count Views via testID pattern
-    // A simpler approach: query the accessibility labels which only appear on filled slots
-    const filledLabels = getAllByRole ? [] : [];
+    // No accessibility labels — empty slots render as plain Views
+    const filledLabels = queryAllByLabelText(/Captured meal/);
     expect(filledLabels).toHaveLength(0);
   });
 
