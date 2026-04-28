@@ -35,7 +35,8 @@ describe('MealThumbnailGrid', () => {
   });
 
   it('renders Image for a filled slot with correct URL', () => {
-    const snaps = [{ id: 'snap_1', thumb: '/media/images/img_001.jpg', rating: null }];
+    const snaps = [{ id: 'snap_1', thumb: '/media/images/img_001.jpg', rating: 5 }];
+
     const { getByLabelText } = render(<MealThumbnailGrid recentSnaps={snaps} targetCount={8} />);
     // After reversing a 1-element array slot 0 should be filled
     const img = getByLabelText('Captured meal 1');
