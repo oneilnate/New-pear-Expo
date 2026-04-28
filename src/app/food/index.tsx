@@ -237,7 +237,6 @@ export default function FoodHomeScreen() {
               </Pressable>
             </View>
           )}
-
         </View>
 
         {/* Food Snap CTA */}
