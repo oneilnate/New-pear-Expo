@@ -35,7 +35,7 @@ import {
 import {
   FoodSnapCard,
   foodQueryKeys,
-  PodGrid,
+  MealThumbnailGrid,
   StartNewPodButton,
   useCompletePod,
   useCurrentPod,
@@ -162,15 +162,18 @@ export default function FoodHomeScreen() {
           {/* Description */}
           {!isGridUnlocked && (
             <Text style={styles.description}>
-              Snap {targetCount} meals to unlock your personalized{' '}
+              Snap <Text style={styles.descriptionBold}>8</Text> meals to unlock your personalized{' '}
               <Text style={styles.descriptionBold}>FoodPod</Text> with nutrition insights and meal
               ideas.
             </Text>
           )}
 
-          {/* Dot grid */}
+          {/* Thumbnail grid */}
           <View style={styles.gridWrapper}>
-            <PodGrid capturedCount={capturedCount} targetCount={targetCount} />
+            <MealThumbnailGrid
+              recentSnaps={podState?.recentSnaps ?? []}
+              targetCount={podState?.targetCount ?? 8}
+            />
           </View>
 
           <View style={styles.divider} />
