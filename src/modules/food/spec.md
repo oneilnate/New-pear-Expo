@@ -97,3 +97,15 @@ F7 (exe_VKuAAzpN) implemented. Dynamic current pod + 7-dot grid + StartNewPodBut
 - StartNewPodButton added: secondary style, always visible on Home screen;
   tap -> POST /api/pods -> invalidate currentPod query -> reset FoodPodProvider
   -> stays on home screen (user sees fresh 0/7 pod; no navigation to /food/capture)
+
+F21 (exe_VbVVWNSD) implemented. MealThumbnailGrid replaces PodGrid 7-dot grid.
+- MealThumbnailGrid component added to components/; 4 cols × 2 rows of 64px rounded squares
+  (radius 12, gap 10). Empty slots: #E2E8F0 background. Filled slots: meal photo <Image>.
+  recentSnaps reversed (backend sends DESC; slot 0 = first captured meal).
+  URI = EXPO_PUBLIC_API_BASE_URL + snap.thumb.
+- Home screen (/food/index.tsx): PodGrid import swapped to MealThumbnailGrid.
+  Props: recentSnaps={podState?.recentSnaps ?? []} targetCount={podState?.targetCount ?? 8}
+- Subtitle updated: "Snap 8 meals to unlock your personalized FoodPod with nutrition
+  insights and meal ideas."
+- Backend target_count bumped 7→8 (exe_NS3aAxjB); recentSnaps now returns up to 8 thumbs.
+- PodGrid export kept in index.ts for backward compatibility (cleanup in follow-up PR).

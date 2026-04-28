@@ -9,6 +9,9 @@ export type { FoodSnapCardProps } from './components/FoodSnapCard';
 
 // Components
 export { FoodSnapCard } from './components/FoodSnapCard';
+export type { MealThumbnailGridProps } from './components/MealThumbnailGrid';
+export { MealThumbnailGrid } from './components/MealThumbnailGrid';
+
 // Player
 export type { PlayerControlsProps } from './components/PlayerControls';
 export { formatMs, PlayerControls } from './components/PlayerControls';
